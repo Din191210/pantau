@@ -69,6 +69,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 		httpSrv.Close()
 		db.Close()
 		os.Remove(tmpPath)
+		os.Remove(store.InitialPasswordFile(tmpPath))
 	})
 
 	return &testEnv{
@@ -85,7 +86,11 @@ func setupTestEnv(t *testing.T) *testEnv {
 func loginClient(t *testing.T, env *testEnv) *http.Client {
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar}
-	loginBody, _ := json.Marshal(map[string]string{"password": "admin"})
+	pw, err := os.ReadFile(store.InitialPasswordFile(env.dbPath))
+	if err != nil {
+		t.Fatalf("read initial password: %v", err)
+	}
+	loginBody, _ := json.Marshal(map[string]string{"password": strings.TrimSpace(string(pw))})
 	resp, err := client.Post(env.httpServer.URL+"/api/login", "application/json", bytes.NewReader(loginBody))
 	if err != nil {
 		t.Fatalf("login failed: %v", err)
@@ -1176,8 +1181,17 @@ func TestTicket14_EncryptedSystemSnapshotAndGitHubSyncAPI(t *testing.T) {
 	env1 := setupTestEnv(t)
 	client1 := loginClient(t, env1)
 
-	// 1. Status on fresh DB
+	// 1. Status is private to logged-in admins (it names the backup repo); a new install
+	// has a random password, so it is never "fresh".
 	resp, err := http.Get(env1.httpServer.URL + "/api/snapshot/status")
+	if err != nil {
+		t.Fatalf("status get: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for anonymous snapshot status, got %d", resp.StatusCode)
+	}
+	resp, err = client1.Get(env1.httpServer.URL + "/api/snapshot/status")
 	if err != nil {
 		t.Fatalf("status get: %v", err)
 	}
@@ -1187,8 +1201,8 @@ func TestTicket14_EncryptedSystemSnapshotAndGitHubSyncAPI(t *testing.T) {
 	}
 	_ = json.NewDecoder(resp.Body).Decode(&statusResp)
 	resp.Body.Close()
-	if !statusResp.Fresh || statusResp.HostCount != 0 {
-		t.Fatalf("expected fresh=true, host_count=0, got fresh=%v, count=%d", statusResp.Fresh, statusResp.HostCount)
+	if statusResp.Fresh || statusResp.HostCount != 0 {
+		t.Fatalf("expected fresh=false, host_count=0, got fresh=%v, count=%d", statusResp.Fresh, statusResp.HostCount)
 	}
 
 	// 2. Add host to env1
@@ -1210,7 +1224,7 @@ func TestTicket14_EncryptedSystemSnapshotAndGitHubSyncAPI(t *testing.T) {
 	})
 
 	// Verify no longer fresh
-	resp2, _ := http.Get(env1.httpServer.URL + "/api/snapshot/status")
+	resp2, _ := client1.Get(env1.httpServer.URL + "/api/snapshot/status")
 	_ = json.NewDecoder(resp2.Body).Decode(&statusResp)
 	resp2.Body.Close()
 	if statusResp.Fresh || statusResp.HostCount != 1 {
@@ -1235,13 +1249,13 @@ func TestTicket14_EncryptedSystemSnapshotAndGitHubSyncAPI(t *testing.T) {
 	// 4. Create fresh second environment
 	env2 := setupTestEnv(t)
 
-	// Verify env2 starts fresh
-	fresh2, _ := env2.db.IsFresh()
-	if !fresh2 {
-		t.Fatalf("expected env2 to start fresh")
+	// A new install is never "fresh": snapshot import requires login.
+	if fresh2, _ := env2.db.IsFresh(); fresh2 {
+		t.Fatalf("expected env2 not to be fresh")
 	}
+	client2 := loginClient(t, env2)
 
-	// 5. Import into env2 using multipart form (unauthenticated allowed since env2 is fresh)
+	// 5. Import into env2 using multipart form: anonymous is refused, admin succeeds
 	var b bytes.Buffer
 	w := io.MultiWriter(&b)
 	boundary := "---------------------------pantauBoundary123"
@@ -1254,13 +1268,26 @@ func TestTicket14_EncryptedSystemSnapshotAndGitHubSyncAPI(t *testing.T) {
 	w.Write(encryptedData)
 	w.Write([]byte("\r\n--" + boundary + "--\r\n"))
 
-	importReq, err := http.NewRequest(http.MethodPost, env2.httpServer.URL+"/api/snapshot/import", &b)
-	if err != nil {
-		t.Fatalf("new import req: %v", err)
+	importBody := b.Bytes()
+	newImport := func() *http.Request {
+		req, err := http.NewRequest(http.MethodPost, env2.httpServer.URL+"/api/snapshot/import", bytes.NewReader(importBody))
+		if err != nil {
+			t.Fatalf("new import req: %v", err)
+		}
+		req.Header.Set("Content-Type", "multipart/form-data; boundary="+boundary)
+		return req
 	}
-	importReq.Header.Set("Content-Type", "multipart/form-data; boundary="+boundary)
 
-	impResp, err := http.DefaultClient.Do(importReq)
+	anonResp, err := http.DefaultClient.Do(newImport())
+	if err != nil {
+		t.Fatalf("anonymous import do: %v", err)
+	}
+	anonResp.Body.Close()
+	if anonResp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("anonymous import got %d, want 401", anonResp.StatusCode)
+	}
+
+	impResp, err := client2.Do(newImport())
 	if err != nil {
 		t.Fatalf("import do: %v", err)
 	}
@@ -1468,7 +1495,7 @@ func TestPortAutoScanFallback(t *testing.T) {
 	basePort := baseListener.Addr().(*net.TCPAddr).Port
 
 	// In non-explicit mode, listenPort should detect basePort is busy and scan to another port
-	l, boundPort, err := listenPort(basePort, false)
+	l, boundPort, err := listenPort("", basePort, false)
 	if err != nil {
 		t.Fatalf("expected listenPort to auto-scan and succeed, got error: %v", err)
 	}
@@ -1479,7 +1506,7 @@ func TestPortAutoScanFallback(t *testing.T) {
 	}
 
 	// 2. In explicit mode, listenPort should fail-fast when basePort is busy
-	_, _, err = listenPort(basePort, true)
+	_, _, err = listenPort("", basePort, true)
 	if err == nil {
 		t.Fatalf("expected explicit listenPort to fail on busy port %d, but succeeded", basePort)
 	}
@@ -1892,3 +1919,86 @@ func TestUIPackageTabAndProcessTelemetryPresence(t *testing.T) {
 
 
 
+
+// Hardening (fork Purbalingga): initial password file, login lockout, session reset.
+func TestHardening_InitialPasswordFileOwnerOnly(t *testing.T) {
+	env := setupTestEnv(t)
+	st, err := os.Stat(store.InitialPasswordFile(env.dbPath))
+	if err != nil {
+		t.Fatalf("initial password file missing: %v", err)
+	}
+	if st.Mode().Perm() != 0600 {
+		t.Fatalf("initial password file mode = %v, want 0600", st.Mode().Perm())
+	}
+	if fresh, _ := env.db.IsFresh(); fresh {
+		t.Fatal("new install must not be fresh (unauthenticated snapshot import)")
+	}
+	body, _ := json.Marshal(map[string]string{"password": "admin"})
+	resp, err := http.Post(env.httpServer.URL+"/api/login", "application/json", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("login with old default 'admin' got %d, want 401", resp.StatusCode)
+	}
+}
+
+func TestHardening_LoginLockout(t *testing.T) {
+	env := setupTestEnv(t)
+	post := func(pw string) int {
+		body, _ := json.Marshal(map[string]string{"password": pw})
+		resp, err := http.Post(env.httpServer.URL+"/api/login", "application/json", bytes.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return resp.StatusCode
+	}
+	for i := 0; i < 5; i++ {
+		if code := post("wrong-password"); code != http.StatusUnauthorized {
+			t.Fatalf("attempt %d: got %d, want 401", i+1, code)
+		}
+	}
+	pw, _ := os.ReadFile(store.InitialPasswordFile(env.dbPath))
+	if code := post(strings.TrimSpace(string(pw))); code != http.StatusTooManyRequests {
+		t.Fatalf("correct password during lockout got %d, want 429", code)
+	}
+}
+
+func TestHardening_PasswordChangeEndsOtherSessions(t *testing.T) {
+	env := setupTestEnv(t)
+	a := loginClient(t, env)
+	b := loginClient(t, env)
+	old, _ := os.ReadFile(store.InitialPasswordFile(env.dbPath))
+
+	change := func(newPw string) int {
+		body, _ := json.Marshal(map[string]string{"old_password": strings.TrimSpace(string(old)), "new_password": newPw})
+		resp, err := a.Post(env.httpServer.URL+"/api/password", "application/json", bytes.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return resp.StatusCode
+	}
+	if code := change("short"); code != http.StatusBadRequest {
+		t.Fatalf("short password got %d, want 400", code)
+	}
+	if code := change("a-long-enough-passphrase"); code != http.StatusOK {
+		t.Fatalf("password change got %d, want 200", code)
+	}
+	status := func(c *http.Client) int {
+		resp, err := c.Get(env.httpServer.URL + "/api/hosts")
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return resp.StatusCode
+	}
+	if code := status(b); code != http.StatusUnauthorized {
+		t.Fatalf("other session after password change got %d, want 401", code)
+	}
+	if code := status(a); code != http.StatusOK {
+		t.Fatalf("changing session got %d, want 200 (re-issued)", code)
+	}
+}

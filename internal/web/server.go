@@ -14,6 +14,7 @@ import (
 	"io"
 	"io/fs"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -93,6 +94,63 @@ type Server struct {
 	inspectAllMu      sync.Mutex
 	inspectAllActive  bool
 	lastInspectAll    time.Time
+	secureCookies     bool // set when served behind TLS
+	loginMu           sync.Mutex
+	loginFails        map[string]*loginFailure // client IP -> recent failures
+}
+
+// Login lockout: after loginMaxFails wrong passwords from one client, further attempts
+// are refused for loginLockout. Without it bcrypt alone allowed unlimited guessing.
+const (
+	loginMaxFails = 5
+	loginLockout  = 15 * time.Minute
+	sessionTTL    = 12 * time.Hour
+	minPassword   = 12
+)
+
+type loginFailure struct {
+	count int
+	until time.Time
+}
+
+func clientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
+// loginBlocked reports how long the client must still wait, or 0.
+func (s *Server) loginBlocked(ip string) time.Duration {
+	s.loginMu.Lock()
+	defer s.loginMu.Unlock()
+	if f := s.loginFails[ip]; f != nil && time.Now().Before(f.until) {
+		return time.Until(f.until)
+	}
+	return 0
+}
+
+func (s *Server) recordLogin(ip string, ok bool) {
+	s.loginMu.Lock()
+	defer s.loginMu.Unlock()
+	if s.loginFails == nil {
+		s.loginFails = map[string]*loginFailure{}
+	}
+	if ok {
+		delete(s.loginFails, ip)
+		return
+	}
+	f := s.loginFails[ip]
+	if f == nil {
+		f = &loginFailure{}
+		s.loginFails[ip] = f
+	}
+	f.count++
+	if f.count >= loginMaxFails {
+		f.until = time.Now().Add(loginLockout)
+		f.count = 0
+	}
 }
 
 func (s *Server) prepareHTML(raw []byte) {
@@ -142,6 +200,9 @@ func (s *Server) SetSnapshotManager(sm *snapshot.Manager) {
 func (s *Server) SetUpdaterManager(um *updater.Manager) {
 	s.updaterMgr = um
 }
+
+// SetSecureCookies marks the session cookie Secure; enable when served over HTTPS.
+func (s *Server) SetSecureCookies(on bool) { s.secureCookies = on }
 
 func (s *Server) SetVersion(version string) {
 	if version != "" {
@@ -261,7 +322,13 @@ func (s *Server) issueSession(w http.ResponseWriter) string {
 		b = []byte(fmt.Sprintf("%d_%d", time.Now().UnixNano(), time.Now().Unix()))
 	}
 	token := hex.EncodeToString(b)
-	expiry := time.Now().Add(24 * 7 * time.Hour)
+	expiry := time.Now().Add(sessionTTL)
+	s.sessions.Range(func(k, v any) bool {
+		if time.Now().After(v.(time.Time)) {
+			s.sessions.Delete(k)
+		}
+		return true
+	})
 	s.sessions.Store(token, expiry)
 
 	http.SetCookie(w, &http.Cookie{
@@ -270,7 +337,8 @@ func (s *Server) issueSession(w http.ResponseWriter) string {
 		Path:     "/",
 		Expires:  expiry,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		Secure:   s.secureCookies,
+		SameSite: http.SameSiteStrictMode,
 	})
 	return token
 }
@@ -288,6 +356,14 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ip := clientIP(r)
+	if wait := s.loginBlocked(ip); wait > 0 {
+		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
+		logger.Warn("auth", "", "Admin login refused: client locked out", "ip", ip)
+		writeJSON(w, http.StatusTooManyRequests, map[string]interface{}{"error": "too_many_attempts", "retry_after_seconds": int(wait.Seconds()) + 1})
+		return
+	}
+
 	hash, err := s.db.GetSetting("admin_password_hash")
 	if err != nil || hash == "" {
 		http.Error(w, "server error", http.StatusInternalServerError)
@@ -295,10 +371,12 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)); err != nil {
-		logger.Warn("auth", "", "Admin login attempt failed (invalid password)")
+		s.recordLogin(ip, false)
+		logger.Warn("auth", "", "Admin login attempt failed (invalid password)", "ip", ip)
 		http.Error(w, `{"error":"invalid_password"}`, http.StatusUnauthorized)
 		return
 	}
+	s.recordLogin(ip, true)
 
 	// Check if 2FA is active
 	totpEnabled, _ := s.db.GetSetting("totp_enabled")
@@ -610,8 +688,8 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	if len(req.NewPassword) < 4 {
-		http.Error(w, "new password too short", http.StatusBadRequest)
+	if len(req.NewPassword) < minPassword {
+		http.Error(w, fmt.Sprintf(`{"error":"password_too_short","min_length":%d}`, minPassword), http.StatusBadRequest)
 		return
 	}
 
@@ -626,8 +704,14 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
-	_ = s.db.SetSetting("admin_password_hash", string(newHash))
+	if err := s.db.SetSetting("admin_password_hash", string(newHash)); err != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
 	_ = s.db.MarkBootstrapCompleted()
+	// A password change ends every other session (e.g. one opened with a leaked password).
+	s.sessions.Range(func(k, _ any) bool { s.sessions.Delete(k); return true })
+	s.issueSession(w)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "password_updated"})
 }
 
@@ -2215,7 +2299,7 @@ func (s *Server) handleWSDockerLogs(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	cmd := fmt.Sprintf("docker logs -f --tail 100 %s", shellQuote(container))
+	cmd := fmt.Sprintf(sshrunner.ContainerShim+"docker logs -f --tail 100 %s", shellQuote(container))
 	_ = runner.Stream(cmd, outWriter)
 }
 
@@ -2234,7 +2318,9 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("ETag", s.htmlETag)
 	// ponytail: strict CSP to guarantee 100% offline airgapped operation with no external CDN/font leaks
-	w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:; font-src 'self' data:; img-src 'self' data:;")
+	w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:; font-src 'self' data:; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self';")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Referrer-Policy", "no-referrer")
 
 	if match := r.Header.Get("If-None-Match"); match != "" && match == s.htmlETag {
 		w.WriteHeader(http.StatusNotModified)
@@ -2343,6 +2429,10 @@ func (s *Server) checkAuthOrFresh(r *http.Request) bool {
 }
 
 func (s *Server) handleSnapshotStatus(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuthOrFresh(r) {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
 	fresh, _ := s.db.IsFresh()
 	hosts, _ := s.db.ListHosts()
 	ghEnabled, _ := s.db.GetSetting("github_backup_enabled")

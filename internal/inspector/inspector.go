@@ -1105,7 +1105,7 @@ func (ins *Inspector) evaluateRule(h *store.Host, runner sshrunner.Runner, rule 
 	switch rule.Kind {
 	case "container":
 		// Check docker container status
-		inspectCmd := fmt.Sprintf(`docker inspect -f '{{.State.Status}}|{{.State.ExitCode}}|{{.State.OOMKilled}}|{{.State.Error}}' %s 2>/dev/null`, shellQuote(rule.Target))
+		inspectCmd := fmt.Sprintf(sshrunner.ContainerShim+`docker inspect -f '{{.State.Status}}|{{.State.ExitCode}}|{{.State.OOMKilled}}|{{.State.Error}}' %s 2>/dev/null`, shellQuote(rule.Target))
 		out, _, exitCode, _ := runner.Exec(inspectCmd)
 		out = strings.TrimSpace(out)
 		if exitCode != 0 || out == "" {
@@ -1127,7 +1127,7 @@ func (ins *Inspector) evaluateRule(h *store.Host, runner sshrunner.Runner, rule 
 			if len(parts) >= 4 {
 				diag.WriteString(fmt.Sprintf("ExitCode: %s, OOMKilled: %s, Error: %s\n", parts[1], parts[2], parts[3]))
 			}
-			logOut, _, _, _ := runner.Exec(fmt.Sprintf(`docker logs --tail 50 %s 2>&1`, shellQuote(rule.Target)))
+			logOut, _, _, _ := runner.Exec(fmt.Sprintf(sshrunner.ContainerShim+`docker logs --tail 50 %s 2>&1`, shellQuote(rule.Target)))
 			diag.WriteString("--- Last 50 lines of container logs ---\n")
 			diag.WriteString(strings.TrimSpace(logOut))
 			rootCause = diag.String()
@@ -1363,7 +1363,7 @@ func (ins *Inspector) GenerateBaseline(hostID int64) ([]store.DesiredRule, error
 	rules = append(rules, diskRule)
 
 	// 2. Running Docker containers
-	dockerOut, _, code, _ := runner.Exec(`docker ps --format '{{.Names}}' 2>/dev/null`)
+	dockerOut, _, code, _ := runner.Exec(sshrunner.ContainerShim + `docker ps --format '{{.Names}}' 2>/dev/null`)
 	if code == 0 && dockerOut != "" {
 		for _, name := range strings.Split(strings.TrimSpace(dockerOut), "\n") {
 			name = strings.TrimSpace(name)
@@ -1450,7 +1450,7 @@ func (ins *Inspector) DockerAction(hostID int64, containerName, action string) (
 	}
 	defer runner.Close()
 
-	cmd := fmt.Sprintf("docker %s %s", action, shellQuote(containerName))
+	cmd := fmt.Sprintf(sshrunner.ContainerShim+"docker %s %s", action, shellQuote(containerName))
 	stdout, stderr, exitCode, err := runner.Exec(cmd)
 	if err != nil || exitCode != 0 {
 		return "", fmt.Errorf("docker %s failed (exit %d): %s %s", action, exitCode, stdout, stderr)

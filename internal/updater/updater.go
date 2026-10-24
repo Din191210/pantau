@@ -279,6 +279,9 @@ func CompareVersions(v1, v2 string) int {
 // 5. Pre-flight smoke tests the candidate binary (`pantau.tmp -v`).
 // 6. Atomically replaces current executable.
 func (m *Manager) ApplyUpdate(ctx context.Context) error {
+	if m.disabled {
+		return errors.New("self-update is disabled (-disable-update-check); rebuild from source instead")
+	}
 	if IsDocker() {
 		return errors.New("self-update is disabled in Docker container; pull the new container image instead")
 	}

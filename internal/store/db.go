@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -202,7 +203,7 @@ type GlobalFilePin struct {
 
 func Open(dbPath string) (*DB, error) {
 	if dir := filepath.Dir(dbPath); dir != "." && dir != "" {
-		_ = os.MkdirAll(dir, 0755)
+		_ = os.MkdirAll(dir, 0700)
 	}
 
 	db, err := sql.Open("sqlite", dbPath+"?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)")
@@ -216,9 +217,14 @@ func Open(dbPath string) (*DB, error) {
 		return nil, fmt.Errorf("migrate: %w", err)
 	}
 
-	if err := s.initDefaults(); err != nil {
+	if err := s.initDefaults(dbPath); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("init defaults: %w", err)
+	}
+
+	// The database holds the SSH private key and admin hash; keep it owner-only.
+	for _, f := range []string{dbPath, dbPath + "-wal", dbPath + "-shm"} {
+		_ = os.Chmod(f, 0600)
 	}
 
 	return s, nil
@@ -418,12 +424,28 @@ func (d *DB) alterAddColumn(table, column, colType string) error {
 	return err
 }
 
-func (d *DB) initDefaults() error {
-	// 1. Ensure default admin password exists (default: "admin")
+// InitialPasswordFile is where a fresh install writes its generated admin password.
+func InitialPasswordFile(dbPath string) string { return dbPath + ".admin-password" }
+
+func (d *DB) initDefaults(dbPath string) error {
+	// 1. Fresh install: random admin password written to an owner-only file. A fixed
+	// "admin" default left every new instance open (including unauthenticated snapshot
+	// import while the default was unchanged) until someone logged in first.
 	var hash string
 	err := d.QueryRow("SELECT value FROM settings WHERE key = 'admin_password_hash'").Scan(&hash)
 	if err == sql.ErrNoRows {
-		defaultHash, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+		initial := "admin"
+		if !strings.HasPrefix(dbPath, ":memory:") && !strings.HasPrefix(dbPath, "file:") {
+			b := make([]byte, 15)
+			if _, err := rand.Read(b); err != nil {
+				return err
+			}
+			initial = base64.RawURLEncoding.EncodeToString(b)
+			if err := os.WriteFile(InitialPasswordFile(dbPath), []byte(initial+"\n"), 0600); err != nil {
+				return fmt.Errorf("write initial admin password: %w", err)
+			}
+		}
+		defaultHash, err := bcrypt.GenerateFromPassword([]byte(initial), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}

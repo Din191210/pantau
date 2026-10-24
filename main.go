@@ -131,11 +131,19 @@ func resolveLogLevel(flagLevel string, quiet bool) slog.Level {
 // tryListen checks if port p is free on both IPv4 loopback and wildcard interfaces.
 // ponytail: on Windows Winsock, net.Listen("tcp", ":p") binds dual-stack IPv6 without error even if an IPv4 service (e.g. SQLFox) occupies 127.0.0.1:p.
 // Probing 127.0.0.1 via Dial and verifying IPv4 binding ensures busy ports are correctly detected across OSes.
-func tryListen(p int) net.Listener {
+func tryListen(host string, p int) net.Listener {
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", p), 50*time.Millisecond)
 	if err == nil {
 		_ = conn.Close()
 		return nil
+	}
+
+	if host != "0.0.0.0" && host != "" {
+		l, err := net.Listen("tcp", net.JoinHostPort(host, strconv.Itoa(p)))
+		if err != nil {
+			return nil
+		}
+		return l
 	}
 
 	l4, err := net.Listen("tcp4", fmt.Sprintf("127.0.0.1:%d", p))
@@ -151,9 +159,9 @@ func tryListen(p int) net.Listener {
 	return l
 }
 
-func listenPort(port int, portExplicit bool) (net.Listener, int, error) {
+func listenPort(host string, port int, portExplicit bool) (net.Listener, int, error) {
 	if portExplicit {
-		l := tryListen(port)
+		l := tryListen(host, port)
 		if l == nil {
 			return nil, port, fmt.Errorf("port %d is already in use", port)
 		}
@@ -161,7 +169,7 @@ func listenPort(port int, portExplicit bool) (net.Listener, int, error) {
 	}
 
 	for p := port; p <= port+19; p++ {
-		if l := tryListen(p); l != nil {
+		if l := tryListen(host, p); l != nil {
 			if p != port {
 				fmt.Printf("⚠️ Port %d was in use, auto-scanned and bound to port %d\n", port, p)
 			}
@@ -179,7 +187,10 @@ func main() {
 	flag.BoolVar(versionFlag, "v", false, "Print version and exit (shorthand)")
 	checkUpdateFlag := flag.Bool("check-update", false, "Check for newer Pantau release and exit")
 	updateFlag := flag.Bool("update", false, "Self-update Pantau to latest release and exit")
-	disableUpdateCheckFlag := flag.Bool("disable-update-check", false, "Disable background update checks (recommended for airgapped environments)")
+	// Fork lokal: pembaruan dari upstream akan menimpa binari yang sudah ditambal, jadi default-nya mati.
+	disableUpdateCheckFlag := flag.Bool("disable-update-check", true, "Disable background update checks and self-update (default true in this hardened fork)")
+	listenFlag := flag.String("listen", envOr("PANTAU_LISTEN", "127.0.0.1"), "Bind address; use 0.0.0.0 only behind an authenticating TLS proxy [env: PANTAU_LISTEN]")
+	legacySSHFlag := flag.Bool("legacy-ssh", os.Getenv("PANTAU_LEGACY_SSH") == "true", "Allow SHA-1/CBC/DSA SSH algorithms for CentOS 5/6-era hosts [env: PANTAU_LEGACY_SSH]")
 	portFlag := flag.Int("port", 8080, "HTTP server port")
 	dbFlag := flag.String("db", "pantau.db", "SQLite database file path")
 	openBrowserFlag := flag.Bool("open", runtime.GOOS == "windows", "Open default browser on start")
@@ -188,6 +199,7 @@ func main() {
 	quietFlag := flag.Bool("quiet", false, "Suppress non-error console logs (shorthand for -log-level=error)")
 	flag.BoolVar(quietFlag, "q", false, "Suppress non-error console logs (shorthand)")
 	flag.Parse()
+	sshrunner.AllowLegacyAlgorithms = *legacySSHFlag
 
 	ver := resolveVersion()
 	if *versionFlag {
@@ -286,6 +298,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+	if _, err := os.Stat(store.InitialPasswordFile(dbPath)); err == nil {
+		fmt.Printf("🔑 Initial admin password is in %s (owner-only). Change it after first login, then delete that file.\n", store.InitialPasswordFile(dbPath))
+	}
 
 	if *disable2FAFlag {
 		_ = db.SetSetting("totp_enabled", "false")
@@ -309,15 +324,19 @@ func main() {
 	go snapshotMgr.Start(ctx)
 
 	disableUpdateCheck := *disableUpdateCheckFlag || os.Getenv("PANTAU_DISABLE_UPDATE_CHECK") == "true"
+	if os.Getenv("PANTAU_DISABLE_UPDATE_CHECK") == "false" {
+		disableUpdateCheck = false
+	}
 	updaterMgr := updater.NewManager(ver, disableUpdateCheck)
 	updaterMgr.StartBackgroundTicker(ctx)
 
 	server := web.NewServer(db, ins, dispatcher)
 	server.SetVersion(ver)
+	server.SetSecureCookies(os.Getenv("PANTAU_SECURE_COOKIES") == "true")
 	server.SetSnapshotManager(snapshotMgr)
 	server.SetUpdaterManager(updaterMgr)
 	server.SetDocsFS(embeddedDocs)
-	listener, port, err := listenPort(port, portExplicit)
+	listener, port, err := listenPort(*listenFlag, port, portExplicit)
 	if err != nil {
 		logger.Error("system", "", "Failed to bind port: "+err.Error())
 		fmt.Fprintf(os.Stderr, "❌ Failed to bind port: %v\n", err)
@@ -429,4 +448,11 @@ func runInspectionCycle(db *store.DB, ins *inspector.Inspector) bool {
 		}
 	}
 	return true
+}
+
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

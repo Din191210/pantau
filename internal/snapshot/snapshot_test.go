@@ -177,10 +177,11 @@ func TestDatabaseExportAndImportRoundtrip(t *testing.T) {
 	}
 	defer db2.Close()
 
-	// Initial fresh check
+	// A new install gets a random admin password, so it is never "fresh" (fresh allowed
+	// unauthenticated snapshot import). Import is still allowed once logged in.
 	isFresh, err := db2.IsFresh()
-	if err != nil || !isFresh {
-		t.Fatalf("expected db2 to be fresh initially, isFresh=%v, err=%v", isFresh, err)
+	if err != nil || isFresh {
+		t.Fatalf("expected db2 not to be fresh, isFresh=%v, err=%v", isFresh, err)
 	}
 
 	// Import into DB2
@@ -329,9 +330,8 @@ func TestGitHubMockSyncAndRestore(t *testing.T) {
 	db2, _ := store.Open(tmpPath2)
 	defer db2.Close()
 
-	isFresh, _ := db2.IsFresh()
-	if !isFresh {
-		t.Fatalf("expected db2 to be fresh")
+	if isFresh, _ := db2.IsFresh(); isFresh {
+		t.Fatalf("expected db2 not to be fresh (random initial password)")
 	}
 
 	mgr2 := snapshot.NewManager(db2, ghClient)

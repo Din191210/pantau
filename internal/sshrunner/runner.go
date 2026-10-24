@@ -122,7 +122,47 @@ func Connect(host string, port int, user, privateKeyPEM string, timeout time.Dur
 // so Pantau can seamlessly connect to both modern servers and legacy servers (CentOS 5/6, Debian 7) without per-host flags.
 // ponytail: Universal legacy-compatible cryptographic profile.
 // Upgrade path: per-host SSH security profiles if high-compliance environments forbid SHA-1 / CBC.
+// ContainerShim is prefixed to every remote `docker ...` command so Podman-only hosts
+// (Fedora/RHEL, rootless) work unchanged: `docker` falls back to `podman`.
+const ContainerShim = `command -v docker >/dev/null 2>&1 || docker() { podman "$@"; }; `
+
+// AllowLegacyAlgorithms enables SHA-1 key exchange, CBC ciphers and DSA/ssh-rsa host keys.
+// Off by default: they enable downgrade attacks against modern hosts. Turn on with -legacy-ssh
+// only when CentOS 5/6-era hosts must be monitored.
+var AllowLegacyAlgorithms = false
+
 func configureLegacyCompatibleSSH(config *ssh.ClientConfig) {
+	if !AllowLegacyAlgorithms {
+		config.Config = ssh.Config{
+			KeyExchanges: []string{
+				"curve25519-sha256",
+				"curve25519-sha256@libssh.org",
+				"ecdh-sha2-nistp256",
+				"ecdh-sha2-nistp384",
+				"ecdh-sha2-nistp521",
+				"diffie-hellman-group14-sha256",
+				"diffie-hellman-group16-sha512",
+				"diffie-hellman-group-exchange-sha256",
+			},
+			Ciphers: []string{
+				"chacha20-poly1305@openssh.com",
+				"aes128-gcm@openssh.com",
+				"aes256-gcm@openssh.com",
+				"aes128-ctr",
+				"aes192-ctr",
+				"aes256-ctr",
+			},
+		}
+		config.HostKeyAlgorithms = []string{
+			ssh.KeyAlgoED25519,
+			ssh.KeyAlgoRSASHA512,
+			ssh.KeyAlgoRSASHA256,
+			ssh.KeyAlgoECDSA256,
+			ssh.KeyAlgoECDSA384,
+			ssh.KeyAlgoECDSA521,
+		}
+		return
+	}
 	config.Config = ssh.Config{
 		KeyExchanges: []string{
 			"curve25519-sha256",

@@ -41,8 +41,8 @@ footer { position: fixed; bottom: 0; left: 0; right: 0; height: 36px; z-index: 4
 .btn:hover { opacity: 0.9; text-decoration: none; color: var(--text); }
 a.btn { text-decoration: none; color: var(--text); display: inline-flex; align-items: center; justify-content: center; }
 a.btn:hover { text-decoration: none; color: var(--text); }
-.btn-primary { background: var(--primary); }
-.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary { background: #2563eb; } /* 5.2:1 untuk teks putih; --primary (#3b82f6) hanya 3.7:1 */
+.btn-primary:hover { background: #1d4ed8; }
 .btn-danger { background: var(--danger); }
 .btn-success { background: var(--success); }
 .btn-warning { background: var(--warning); color: #000; }
@@ -1205,8 +1205,7 @@ body.has-workspace-shelf .container {
 
     <div id="loginErr" style="color: var(--danger); font-size: 0.8rem; text-align: center;"></div>
     <div style="border-top: 1px solid var(--card-border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; text-align: center;">
-      <a href="javascript:void(0)" onclick="openRestoreModal()" style="font-size: 0.8rem; color: #38bdf8; text-decoration: none;" data-i18n="restore_link">🔄 Restore from Backup (GitHub / .enc File)</a>
-      <a href="javascript:void(0)" onclick="openDocumentationModal()" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: none;" data-i18n="docs_link">📖 Documentation & Guide</a>
+      <a href="javascript:void(0)" onclick="openDocumentationModal()" style="font-size: 0.8rem; display: inline-block; padding: 6px 4px; color: var(--text-muted); text-decoration: none;" data-i18n="docs_link">📖 Documentation & Guide</a>
     </div>
   </div>
 </div>
@@ -4430,7 +4429,7 @@ function renderGridView(grid, isManualSort) {
 
       const noteSnippet = (h.notes || '').trim();
       const noteHtml = `
-        <div class="host-note-badge" onclick="openEditNoteModal(${h.id}, decodeURIComponent('${encodeURIComponent(h.notes || '')}'), decodeURIComponent('${encodeURIComponent(h.name || '')}'))" title="${t('edit_host_note_title')}">
+        <div class="host-note-badge" onclick="openEditNoteModal(${h.id}, decodeURIComponent(${jsArg(encodeURIComponent(h.notes || ''))}), decodeURIComponent(${jsArg(encodeURIComponent(h.name || ''))}))" title="${t('edit_host_note_title')}">
           <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">
             📝 ${noteSnippet ? escapeHtml(noteSnippet) : '<span style="color: var(--text-muted); font-style: italic;">' + t('no_note_set') + '</span>'}
           </span>
@@ -4467,7 +4466,7 @@ function renderGridView(grid, isManualSort) {
           </div>
         </div>
         ${noteHtml}
-        <div class="stat-row"><span>${t('address')}</span> <span>${h.host}:${h.port} (${h.user})</span></div>
+        <div class="stat-row"><span>${t('address')}</span> <span>${escapeHtml(h.host)}:${h.port} (${escapeHtml(h.user)})</span></div>
         <div class="stat-row"><span>${t('os')}</span> <span>${escapeHtml(h.os_info || 'Unknown')}</span></div>
         <div class="stat-row"><span>${t('uptime')}</span> <span>${escapeHtml(h.uptime || '-')}</span></div>
         <div class="stat-row" style="align-items: center;">
@@ -4542,7 +4541,7 @@ function renderGridView(grid, isManualSort) {
             <div class="dropdown-menu" id="dropdown-${h.id}">
               <button class="dropdown-item" onclick="openEditHostModal(${h.id})">✏️ <span>${t('edit_host', 'Edit Host')}</span></button>
               <button class="dropdown-item" onclick="testHostSSH(${h.id})">⚡ <span>${t('test_connection', 'Test Connection')}</span></button>
-              <button class="dropdown-item" onclick="openInjectKeyModal(${h.id}, '${escapeHtml(h.name)}')">🔑 <span>${t('btn_inject_key', 'Inject Key')}</span></button>
+              <button class="dropdown-item" onclick="openInjectKeyModal(${h.id}, ${jsArg(h.name)})">🔑 <span>${t('btn_inject_key', 'Inject Key')}</span></button>
               <div class="dropdown-divider"></div>
               <button class="dropdown-item danger" onclick="deleteHost(${h.id})">🗑️ <span>${t('delete_host', 'Delete Host')}</span></button>
             </div>
@@ -4654,7 +4653,7 @@ function renderListView(listContainer, isManualSort) {
 
       const noteSnippet = (h.notes || '').trim();
       const noteHtml = `
-        <div class="host-note-badge" style="display: inline-flex;" onclick="openEditNoteModal(${h.id}, decodeURIComponent('${encodeURIComponent(h.notes || '')}'), decodeURIComponent('${encodeURIComponent(h.name || '')}'))" title="${t('edit_host_note_title')}">
+        <div class="host-note-badge" style="display: inline-flex;" onclick="openEditNoteModal(${h.id}, decodeURIComponent(${jsArg(encodeURIComponent(h.notes || ''))}), decodeURIComponent(${jsArg(encodeURIComponent(h.name || ''))}))" title="${t('edit_host_note_title')}">
           <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">
             ${noteSnippet ? escapeHtml(noteSnippet) : '<span style="color: var(--text-muted); font-style: italic;">' + t('no_note_set') + '</span>'}
           </span>
@@ -4682,7 +4681,7 @@ function renderListView(listContainer, isManualSort) {
             ${h.group_name ? `<span class="badge" style="font-size: 0.65rem; background: rgba(56, 189, 248, 0.12); color: #38bdf8;">📁 ${escapeHtml(h.group_name)}</span>` : ''}
           </div>
         </td>
-        <td>${h.host}:${h.port} <span style="color: var(--text-muted); font-size: 0.8rem;">(${h.user})</span></td>
+        <td>${escapeHtml(h.host)}:${h.port} <span style="color: var(--text-muted); font-size: 0.8rem;">(${escapeHtml(h.user)})</span></td>
         <td style="color: var(--text-muted);">${escapeHtml(h.os_info || '-')}</td>
         <td title="${recency.title}" style="font-size: 0.8rem; white-space: nowrap; ${recency.isStale ? 'color: #fbbf24; font-weight: 600;' : 'color: var(--text-muted);'}">
           ${recency.isStale ? '<span title="' + t('stale_data', 'Stale Data (>10m)') + '">⚠️</span> ' : ''}🕒 ${recency.relative}${h.last_duration_ms > 0 ? `<div style="font-size: 0.72rem; color: #34d399; font-weight: 600;">${h.last_duration_ms}ms</div>` : ''}
@@ -4713,7 +4712,7 @@ function renderListView(listContainer, isManualSort) {
               <div class="dropdown-menu" id="dropdown-list-${h.id}">
                 <button class="dropdown-item" onclick="openEditHostModal(${h.id})">✏️ <span>${t('edit_host', 'Edit Host')}</span></button>
                 <button class="dropdown-item" onclick="testHostSSH(${h.id})">⚡ <span>${t('test_connection', 'Test Connection')}</span></button>
-                <button class="dropdown-item" onclick="openInjectKeyModal(${h.id}, '${escapeHtml(h.name)}')">🔑 <span>${t('btn_inject_key', 'Inject Key')}</span></button>
+                <button class="dropdown-item" onclick="openInjectKeyModal(${h.id}, ${jsArg(h.name)})">🔑 <span>${t('btn_inject_key', 'Inject Key')}</span></button>
                 <div class="dropdown-divider"></div>
                 <button class="dropdown-item danger" onclick="deleteHost(${h.id})">🗑️ <span>${t('delete_host', 'Delete Host')}</span></button>
               </div>
@@ -5376,7 +5375,7 @@ function switchTab(tab, presetID) {
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <h4 style="margin: 0;">${t('lifecycle_assessment')}</h4>
-            <button class="btn btn-sm" onclick="openCommissionDateModal(${d.host.id}, '${escapeHtml(d.host.commission_date || '')}', '${escapeHtml(d.host.bios_date || '')}')" style="font-size: 0.75rem; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;" title="${t('edit_commission_date', 'Edit Commission Date')}">
+            <button class="btn btn-sm" onclick="openCommissionDateModal(${d.host.id}, ${jsArg(d.host.commission_date || '')}, ${jsArg(d.host.bios_date || '')})" style="font-size: 0.75rem; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;" title="${t('edit_commission_date', 'Edit Commission Date')}">
               <span>📅</span>
               <span>${d.host.commission_date ? escapeHtml(d.host.commission_date) : t('set_commission_date', 'Set Commission Date')}</span>
             </button>
@@ -5492,7 +5491,7 @@ function switchTab(tab, presetID) {
         <div class="card" style="grid-column: 1 / -1;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <h4 style="margin: 0;">${t('host_note')}</h4>
-            <button class="btn btn-sm" onclick="openEditNoteModal(${d.host.id}, decodeURIComponent('${encodeURIComponent(d.host.notes || '')}'), decodeURIComponent('${encodeURIComponent(d.host.name || '')}'))">${t('edit')}</button>
+            <button class="btn btn-sm" onclick="openEditNoteModal(${d.host.id}, decodeURIComponent(${jsArg(encodeURIComponent(d.host.notes || ''))}), decodeURIComponent(${jsArg(encodeURIComponent(d.host.name || ''))}))">${t('edit')}</button>
           </div>
           <div style="font-size: 0.85rem; color: #cbd5e1; white-space: pre-wrap; line-height: 1.5; background: #090d16; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--card-border);">
             ${d.host.notes ? escapeHtml(d.host.notes) : '<span style="color: var(--text-muted); font-style: italic;">' + t('no_note_set') + '</span>'}
@@ -5692,9 +5691,9 @@ function switchTab(tab, presetID) {
                 <td><b>${escapeHtml(c.target)}</b></td>
                 <td><span class="badge badge-${c.status === 'ok' ? 'healthy' : 'down'}">${escapeHtml(c.current)}</span></td>
                 <td>
-                  <button class="btn btn-success btn-sm" onclick="dockerAction('${c.target}', 'start')">${t('start')}</button>
-                  <button class="btn btn-warning btn-sm" onclick="dockerAction('${c.target}', 'restart')">${t('restart')}</button>
-                  <button class="btn btn-danger btn-sm" onclick="dockerAction('${c.target}', 'stop')">${t('stop')}</button>
+                  <button class="btn btn-success btn-sm" onclick="dockerAction(${jsArg(c.target)}, 'start')">${t('start')}</button>
+                  <button class="btn btn-warning btn-sm" onclick="dockerAction(${jsArg(c.target)}, 'restart')">${t('restart')}</button>
+                  <button class="btn btn-danger btn-sm" onclick="dockerAction(${jsArg(c.target)}, 'stop')">${t('stop')}</button>
                 </td>
               </tr>
             `).join('')}
@@ -6268,7 +6267,7 @@ async function loadFiles(path) {
       loadHostFilePins(currentHost.id)
     ]);
     if (!listRes.ok) {
-      content.innerHTML = '<p style="color: var(--danger);">' + t('failed_open_path') + path + '</p>';
+      content.innerHTML = '<p style="color: var(--danger);">' + t('failed_open_path') + escapeHtml(path) + '</p>';
       return;
     }
     const data = await listRes.json();
@@ -6279,7 +6278,7 @@ async function loadFiles(path) {
     fileFilterQuery = '';
     renderFilesView();
   } catch(e) {
-    content.innerHTML = '<p style="color: var(--danger);">' + t('failed_open_path') + path + '</p>';
+    content.innerHTML = '<p style="color: var(--danger);">' + t('failed_open_path') + escapeHtml(path) + '</p>';
   }
 }
 
@@ -6296,7 +6295,7 @@ function renderQuickAccessBar() {
         <span class="pin-icon">${icon}</span>
         <span class="pin-name">${escapeHtml(name)}</span>
         ${note ? `<span class="pin-note">(${escapeHtml(note)})</span>` : ''}
-        <span class="pin-chip-action" onclick="event.stopPropagation(); openPinModal('${escapeHtml(pin.path)}', ${isDir})" title="${t('edit_pin')}">✏️</span>
+        <span class="pin-chip-action" onclick="event.stopPropagation(); openPinModal(${jsArg(pin.path)}, ${isDir})" title="${t('edit_pin')}">✏️</span>
       </div>
     `;
   }).join('');
@@ -6326,7 +6325,7 @@ function renderBreadcrumbs(currentPath) {
       html += `<span class="file-breadcrumb-item active">${escapeHtml(parts[i])}</span>`;
     } else {
       const clickPath = accum;
-      html += `<span class="file-breadcrumb-item" onclick="loadFiles('${escapeHtml(clickPath)}')">${escapeHtml(parts[i])}</span>`;
+      html += `<span class="file-breadcrumb-item" onclick="loadFiles(${jsArg(clickPath)})">${escapeHtml(parts[i])}</span>`;
     }
   }
   return html;
@@ -6368,12 +6367,12 @@ function renderFilesView() {
         ${isProtectedDir ? `<span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; white-space: nowrap;">🔒 ${t('protected_path')}</span>` : ''}
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <button class="btn btn-sm" onclick="openTerminalForPath('${escapeHtml(data.path)}')" title="${t('open_terminal_here', 'Open Terminal Here')}" style="display: inline-flex; align-items: center; gap: 4px;">
+        <button class="btn btn-sm" onclick="openTerminalForPath(${jsArg(data.path)})" title="${t('open_terminal_here', 'Open Terminal Here')}" style="display: inline-flex; align-items: center; gap: 4px;">
           <span>💻</span> <span>${t('open_terminal_here', 'Open Terminal Here')}</span>
         </button>
-        <button class="btn btn-sm" onclick="loadFiles('${parent}')">${t('up_dir')}</button>
-        <button class="btn btn-sm" onclick="loadFiles('${escapeHtml(data.path)}')" title="${t('refresh')}">🔄</button>
-        <input type="file" id="fileUploadInput" style="display: none;" onchange="uploadFile('${data.path}')" />
+        <button class="btn btn-sm" onclick="loadFiles(${jsArg(parent)})">${t('up_dir')}</button>
+        <button class="btn btn-sm" onclick="loadFiles(${jsArg(data.path)})" title="${t('refresh')}">🔄</button>
+        <input type="file" id="fileUploadInput" style="display: none;" onchange="uploadFile(${jsArg(data.path)})" />
         <button class="btn btn-primary btn-sm" ${isProtectedDir ? 'disabled title="' + t('cannot_upload_protected') + '"' : ''} onclick="document.getElementById('fileUploadInput').click()">${t('upload_file')}</button>
       </div>
     </div>
@@ -6497,7 +6496,7 @@ function renderFilesTableBody() {
     return `
       <tr>
         <td style="word-break: break-all;">
-          <button type="button" class="btn-file-pin ${isPinned ? 'pinned' : ''}" onclick="openPinModal('${escapeHtml(fullPath)}', ${f.is_dir})" title="${isPinned ? escapeHtml(pin.note || t('pinned')) : t('pin_this_item')}">${isPinned ? '📌' : '📍'}</button>
+          <button type="button" class="btn-file-pin ${isPinned ? 'pinned' : ''}" onclick="openPinModal(${jsArg(fullPath)}, ${f.is_dir})" title="${isPinned ? escapeHtml(pin.note || t('pinned')) : t('pin_this_item')}">${isPinned ? '📌' : '📍'}</button>
           ${f.is_dir 
             ? '<a class="folder-link" href="javascript:void(0)" onclick="loadFiles(\'' + fullPath + '\')"><span style="color: #fbbf24; font-size: 1.1em;">📁</span> <b>' + escapeHtml(f.name) + '</b></a>' 
             : '<span style="font-size: 1.05em; margin-right: 4px;">' + icon + '</span> ' + escapeHtml(f.name)}
@@ -6509,16 +6508,16 @@ function renderFilesTableBody() {
         <td style="text-align: center; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">${f.mod_time}</td>
         <td style="text-align: right; white-space: nowrap; padding-right: 14px;">
           <div class="action-grid" style="margin-left: auto;">
-            <button class="btn btn-sm" title="${t('open_terminal_here', 'Open Terminal Here')}" onclick="openTerminalForPath('${escapeHtml(targetTermPath)}')">💻</button>
+            <button class="btn btn-sm" title="${t('open_terminal_here', 'Open Terminal Here')}" onclick="openTerminalForPath(${jsArg(targetTermPath)})">💻</button>
             ${!f.is_dir 
-              ? `<button class="btn btn-primary btn-sm" ${isItemProtected ? 'disabled title="' + t('cannot_modify_protected') + '"' : ''} onclick="openEditor('${escapeHtml(fullPath)}')">${t('edit')}</button>` 
+              ? `<button class="btn btn-primary btn-sm" ${isItemProtected ? 'disabled title="' + t('cannot_modify_protected') + '"' : ''} onclick="openEditor(${jsArg(fullPath)})">${t('edit')}</button>` 
               : '<span style="display:inline-block;"></span>'}
-            <button class="btn btn-sm action-btn-duplicate" title="${t('duplicate')}" ${isItemProtected ? 'disabled title="' + t('cannot_modify_protected') + '"' : ''} onclick="openDuplicateModal('${escapeHtml(fullPath)}', ${f.is_dir}, '${escapeHtml(f.name)}')">📋</button>
+            <button class="btn btn-sm action-btn-duplicate" title="${t('duplicate')}" ${isItemProtected ? 'disabled title="' + t('cannot_modify_protected') + '"' : ''} onclick="openDuplicateModal(${jsArg(fullPath)}, ${f.is_dir}, ${jsArg(f.name)})">📋</button>
             ${f.is_dir 
-              ? `<button class="btn btn-sm action-btn-download" title="${t('download_folder', 'Download Folder Archive')}" onclick="downloadFolder('${escapeHtml(fullPath)}')">⬇️</button>` 
+              ? `<button class="btn btn-sm action-btn-download" title="${t('download_folder', 'Download Folder Archive')}" onclick="downloadFolder(${jsArg(fullPath)})">⬇️</button>` 
               : `<a class="btn btn-sm action-btn-download" title="${t('download_file', 'Download File')}" href="/api/hosts/${currentHost.id}/files/download?path=${encodeURIComponent(fullPath)}" download>⬇️</a>`}
-            <button class="btn btn-warning btn-sm" onclick="openTransferDialog('${escapeHtml(fullPath)}', ${f.is_dir})">${t('copy_to_host')}</button>
-            <button class="btn btn-danger btn-sm" ${isItemProtected ? 'disabled title="' + t('cannot_delete_protected') + '"' : ''} onclick="deleteRemoteFile('${escapeHtml(fullPath)}', '${escapeHtml(currentFilesData.path)}')">🗑️</button>
+            <button class="btn btn-warning btn-sm" onclick="openTransferDialog(${jsArg(fullPath)}, ${f.is_dir})">${t('copy_to_host')}</button>
+            <button class="btn btn-danger btn-sm" ${isItemProtected ? 'disabled title="' + t('cannot_delete_protected') + '"' : ''} onclick="deleteRemoteFile(${jsArg(fullPath)}, ${jsArg(currentFilesData.path)})">🗑️</button>
           </div>
         </td>
       </tr>
@@ -6984,7 +6983,7 @@ function renderGlobalPinsList() {
             const fileName = p.path.split('/').filter(Boolean).pop() || '/';
             return `
               <div class="global-pins-item">
-                <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; cursor: pointer;" onclick="jumpToHostFile(${p.host_id}, '${escapeHtml(p.path)}', ${isDir})" title="${escapeHtml(p.path)}">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; cursor: pointer;" onclick="jumpToHostFile(${p.host_id}, ${jsArg(p.path)}, ${isDir})" title="${escapeHtml(p.path)}">
                   <span style="font-size: 1.1rem; flex-shrink: 0;">${icon}</span>
                   <div style="min-width: 0; flex: 1;">
                     <div style="font-weight: 600; font-size: 0.88rem; color: #f1f5f9; word-break: break-all;">
@@ -6995,13 +6994,13 @@ function renderGlobalPinsList() {
                   </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 12px;">
-                  <button class="btn btn-primary btn-sm" onclick="jumpToHostFile(${p.host_id}, '${escapeHtml(p.path)}', ${isDir})" style="font-size: 0.78rem; padding: 3px 8px;">
+                  <button class="btn btn-primary btn-sm" onclick="jumpToHostFile(${p.host_id}, ${jsArg(p.path)}, ${isDir})" style="font-size: 0.78rem; padding: 3px 8px;">
                     ${isDir ? '📂 Open' : '✏️ Open'}
                   </button>
-                  <button class="btn btn-sm" onclick="openTerminalFromGlobalPin(${p.host_id}, '${escapeHtml(p.path)}', ${isDir})" title="${t('open_terminal_here', 'Open Terminal Here')}" style="font-size: 0.78rem; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px;">
+                  <button class="btn btn-sm" onclick="openTerminalFromGlobalPin(${p.host_id}, ${jsArg(p.path)}, ${isDir})" title="${t('open_terminal_here', 'Open Terminal Here')}" style="font-size: 0.78rem; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px;">
                     <span>💻</span> <span>Terminal</span>
                   </button>
-                  <button class="btn btn-sm" onclick="deleteGlobalPin(${p.host_id}, '${escapeHtml(p.path)}')" title="${t('btn_unpin')}" style="padding: 3px 8px; color: var(--danger); opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                  <button class="btn btn-sm" onclick="deleteGlobalPin(${p.host_id}, ${jsArg(p.path)})" title="${t('btn_unpin')}" style="padding: 3px 8px; color: var(--danger); opacity: 0.7;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
                     🗑️
                   </button>
                 </div>
@@ -7387,11 +7386,11 @@ function renderWorkspaceShelf() {
     }
     const tooltip = (s.type === 'editor' ? 'File: ' + s.path : 'Host: ' + s.hostName + ' (' + (s.tab === 'files' ? s.path : s.tab) + ')') + ' [Alt+' + (idx + 1) + ']';
     return `
-      <div class="workspace-chip" onclick="restoreWorkspaceSession('${s.id}')" title="${escapeHtml(tooltip)}">
+      <div class="workspace-chip" onclick="restoreWorkspaceSession(${jsArg(s.id)})" title="${escapeHtml(tooltip)}">
         <span style="font-size: 0.85rem;">${icon}</span>
         <span class="workspace-chip-title">${escapeHtml(title)}</span>
         ${s.isDirty ? '<span class="workspace-chip-dirty" title="Unsaved changes">•</span>' : ''}
-        <button type="button" class="workspace-chip-close" onclick="closeWorkspaceSession('${s.id}', event)" title="${t('close_session', 'Close session')}">✕</button>
+        <button type="button" class="workspace-chip-close" onclick="closeWorkspaceSession(${jsArg(s.id)}, event)" title="${t('close_session', 'Close session')}">✕</button>
       </div>
     `;
   }).join('');
@@ -7417,13 +7416,13 @@ function renderTerminalTabsList() {
     return;
   }
   container.innerHTML = terminalTabs.map(tabItem => `
-    <div class="terminal-dock-tab ${tabItem.id === activeTerminalTabId ? 'active-tab' : ''}" data-tab-id="${tabItem.id}" onclick="activateTerminalTab('${tabItem.id}')">
+    <div class="terminal-dock-tab ${tabItem.id === activeTerminalTabId ? 'active-tab' : ''}" data-tab-id="${tabItem.id}" onclick="activateTerminalTab(${jsArg(tabItem.id)})">
       <span class="terminal-tab-status-dot ${tabItem.connectedLeft ? '' : 'disconnected'}"></span>
       ${tabItem.hasActivity ? '<span class="terminal-tab-activity-dot" title="New output"></span>' : ''}
-      <span id="tabTitleText_${tabItem.id}" class="terminal-tab-title" ondblclick="startRenameTab(event, '${tabItem.id}')" title="${t('rename_tab_hint')}">
+      <span id="tabTitleText_${tabItem.id}" class="terminal-tab-title" ondblclick="startRenameTab(event, ${jsArg(tabItem.id)})" title="${t('rename_tab_hint')}">
         ${escapeHtml(tabItem.title)}
       </span>
-      <button class="terminal-tab-close-btn" onclick="closeTerminalTab(event, '${tabItem.id}')" title="Close Tab (Alt+W)">✕</button>
+      <button class="terminal-tab-close-btn" onclick="closeTerminalTab(event, ${jsArg(tabItem.id)})" title="Close Tab (Alt+W)">✕</button>
     </div>
   `).join('');
 }
@@ -7529,21 +7528,21 @@ function createTabWorkspaceDOM(tab) {
       <!-- Left side: Presets Dropdown -->
       <div style="display: flex; align-items: center; gap: 6px;">
         <div class="terminal-presets-wrapper" style="position: relative; display: inline-block;">
-          <button class="btn btn-sm" onclick="toggleTerminalPresetsDropdown('${tab.id}', event)" title="${t('tab_settings_presets', 'Presets')}" style="padding: 3px 8px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
+          <button class="btn btn-sm" onclick="toggleTerminalPresetsDropdown(${jsArg(tab.id)}, event)" title="${t('tab_settings_presets', 'Presets')}" style="padding: 3px 8px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">
             ⚡ <span id="lblPresets_${tab.id}">${t('tab_settings_presets', 'Presets')}</span> <span style="font-size: 0.65rem;">▼</span>
           </button>
           <div id="presetsDropdownMenu_${tab.id}" class="terminal-dropdown-menu" style="display: none; min-width: 280px; max-width: 380px; left: 0; right: auto;">
             <div class="terminal-dropdown-search">
-              <input type="text" id="presetSearchInput_${tab.id}" class="terminal-dropdown-search-input" placeholder="${t('search_presets', 'Search presets...')}" oninput="filterTabPresets('${tab.id}')" onclick="event.stopPropagation()">
+              <input type="text" id="presetSearchInput_${tab.id}" class="terminal-dropdown-search-input" placeholder="${t('search_presets', 'Search presets...')}" oninput="filterTabPresets(${jsArg(tab.id)})" onclick="event.stopPropagation()">
             </div>
             <div id="presetDropdownList_${tab.id}" class="terminal-dropdown-list">
               <div style="padding: 8px 12px; font-size: 0.75rem; color: var(--text-muted);">${t('loading', 'Loading...')}</div>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px; border-top: 1px solid var(--card-border); background: rgba(0,0,0,0.2);">
-              <button class="btn btn-sm" onclick="openCreatePresetModal(null, ${tab.hostID}); toggleTerminalPresetsDropdown('${tab.id}', event)" style="font-size: 0.72rem; padding: 3px 8px; flex: 1;">
+              <button class="btn btn-sm" onclick="openCreatePresetModal(null, ${tab.hostID}); toggleTerminalPresetsDropdown(${jsArg(tab.id)}, event)" style="font-size: 0.72rem; padding: 3px 8px; flex: 1;">
                 ➕ ${t('add_preset', 'New Preset')}
               </button>
-              <button class="btn btn-sm" onclick="openPresetManagerModal(${tab.hostID}); toggleTerminalPresetsDropdown('${tab.id}', event)" title="Manage Presets" style="font-size: 0.72rem; padding: 3px 8px;">
+              <button class="btn btn-sm" onclick="openPresetManagerModal(${tab.hostID}); toggleTerminalPresetsDropdown(${jsArg(tab.id)}, event)" title="Manage Presets" style="font-size: 0.72rem; padding: 3px 8px;">
                 ⚙️ ${t('manage_presets', 'Manage')}
               </button>
             </div>
@@ -7555,29 +7554,29 @@ function createTabWorkspaceDOM(tab) {
       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <!-- Cluster 1: Host Navigation & Shortcuts -->
         <div style="display: inline-flex; align-items: center; gap: 4px;">
-          <button class="btn btn-sm" onclick="openFileManagerForTab('${tab.id}')" title="${t('open_in_file_manager', 'Open in File Manager')}" style="padding: 3px 8px; font-size: 0.72rem;">
+          <button class="btn btn-sm" onclick="openFileManagerForTab(${jsArg(tab.id)})" title="${t('open_in_file_manager', 'Open in File Manager')}" style="padding: 3px 8px; font-size: 0.72rem;">
             📁 <span id="lblFileManager_${tab.id}">${t('open_in_file_manager', 'File Manager')}</span>
           </button>
           <div class="terminal-pins-wrapper" style="position: relative; display: inline-block;">
-            <button class="btn btn-sm" onclick="toggleTerminalPinsDropdown('${tab.id}', event)" title="${t('pinned_paths', 'Pinned Paths')}" style="padding: 3px 8px; font-size: 0.72rem;">
+            <button class="btn btn-sm" onclick="toggleTerminalPinsDropdown(${jsArg(tab.id)}, event)" title="${t('pinned_paths', 'Pinned Paths')}" style="padding: 3px 8px; font-size: 0.72rem;">
               📌 <span id="lblPins_${tab.id}">${t('pinned_paths', 'Pins')}</span> <span style="font-size: 0.65rem;">▼</span>
             </button>
             <div id="pinsDropdownMenu_${tab.id}" class="terminal-dropdown-menu" style="display: none; min-width: 280px; max-width: 380px; right: 0;">
               <div class="terminal-dropdown-search">
-                <input type="text" id="pinSearchInput_${tab.id}" class="terminal-dropdown-search-input" placeholder="${t('search_pins', 'Search pinned paths...')}" oninput="filterTerminalPins('${tab.id}')" onclick="event.stopPropagation()">
+                <input type="text" id="pinSearchInput_${tab.id}" class="terminal-dropdown-search-input" placeholder="${t('search_pins', 'Search pinned paths...')}" oninput="filterTerminalPins(${jsArg(tab.id)})" onclick="event.stopPropagation()">
               </div>
               <div id="pinsDropdownList_${tab.id}" class="terminal-dropdown-list">
                 <div style="padding: 8px 12px; font-size: 0.75rem; color: var(--text-muted);">${t('loading', 'Loading...')}</div>
               </div>
               <div style="padding: 6px 8px; border-top: 1px solid var(--card-border); background: rgba(0,0,0,0.2);">
-                <button class="btn btn-sm btn-primary" onclick="openTerminalPinModal('${tab.id}')" style="width: 100%; font-size: 0.72rem; padding: 3px 6px;">
+                <button class="btn btn-sm btn-primary" onclick="openTerminalPinModal(${jsArg(tab.id)})" style="width: 100%; font-size: 0.72rem; padding: 3px 6px;">
                   ➕ ${t('pin_new_path', 'Pin New Path')}
                 </button>
               </div>
             </div>
           </div>
           <div class="terminal-ports-wrapper" style="position: relative; display: inline-block;">
-            <button class="btn btn-sm" onclick="toggleTerminalPortsDropdown('${tab.id}', event)" title="Forwarded Ports / Remote Web Tunnel" style="padding: 3px 8px; font-size: 0.72rem;">
+            <button class="btn btn-sm" onclick="toggleTerminalPortsDropdown(${jsArg(tab.id)}, event)" title="Forwarded Ports / Remote Web Tunnel" style="padding: 3px 8px; font-size: 0.72rem;">
               🌐 <span id="lblPorts_${tab.id}">Ports</span> <span style="font-size: 0.65rem;">▼</span>
             </button>
             <div id="portsDropdownMenu_${tab.id}" class="terminal-dropdown-menu" style="display: none; min-width: 250px; max-width: 320px; right: 0;">
@@ -7587,8 +7586,8 @@ function createTabWorkspaceDOM(tab) {
               <div style="padding: 8px 10px;">
                 <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Buka Remote Port:</label>
                 <div style="display: flex; gap: 4px;">
-                  <input type="number" id="portInput_${tab.id}" placeholder="e.g. 8080, 3000" min="1" max="65535" style="flex: 1; padding: 4px 8px; font-size: 0.78rem; background: var(--bg); color: var(--text); border: 1px solid var(--card-border); border-radius: 4px;" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter') openCustomTunnelForTab('${tab.id}')">
-                  <button class="btn btn-sm btn-primary" onclick="openCustomTunnelForTab('${tab.id}')" style="padding: 3px 10px; font-size: 0.72rem;">
+                  <input type="number" id="portInput_${tab.id}" placeholder="e.g. 8080, 3000" min="1" max="65535" style="flex: 1; padding: 4px 8px; font-size: 0.78rem; background: var(--bg); color: var(--text); border: 1px solid var(--card-border); border-radius: 4px;" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter') openCustomTunnelForTab(${jsArg(tab.id)})">
+                  <button class="btn btn-sm btn-primary" onclick="openCustomTunnelForTab(${jsArg(tab.id)})" style="padding: 3px 10px; font-size: 0.72rem;">
                     Buka
                   </button>
                 </div>
@@ -7615,17 +7614,17 @@ function createTabWorkspaceDOM(tab) {
 
         <!-- Cluster 3: Terminal Session Controls -->
         <div style="display: inline-flex; align-items: center; gap: 4px;">
-          <button class="btn btn-sm" onclick="toggleTabSplit('${tab.id}')" title="Split Terminal (Alt+\\)" style="padding: 3px 8px; font-size: 0.72rem;">
+          <button class="btn btn-sm" onclick="toggleTabSplit(${jsArg(tab.id)})" title="Split Terminal (Alt+\\)" style="padding: 3px 8px; font-size: 0.72rem;">
             🪟 <span id="lblSplit_${tab.id}">${t('split_terminal')}</span>
           </button>
-          <button class="btn btn-sm" onclick="clearTabActiveTerminal('${tab.id}')" title="Clear screen" style="padding: 3px 8px; font-size: 0.72rem;">🧹 Clear</button>
-          <button class="btn btn-sm" onclick="reconnectTabTerminal('${tab.id}')" title="Reconnect SSH" style="padding: 3px 8px; font-size: 0.72rem;">🔄 Reconnect</button>
+          <button class="btn btn-sm" onclick="clearTabActiveTerminal(${jsArg(tab.id)})" title="Clear screen" style="padding: 3px 8px; font-size: 0.72rem;">🧹 Clear</button>
+          <button class="btn btn-sm" onclick="reconnectTabTerminal(${jsArg(tab.id)})" title="Reconnect SSH" style="padding: 3px 8px; font-size: 0.72rem;">🔄 Reconnect</button>
         </div>
       </div>
     </div>
 
     <div id="panesContainer_${tab.id}" style="display: flex; flex: 1; min-height: 380px; gap: 8px; height: 100%; min-width: 0;">
-      <div id="paneLeft_${tab.id}" class="terminal-pane active-pane" onclick="focusTabPane('${tab.id}', 'left')" style="flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; border-radius: 6px; overflow: hidden; background: #000; position: relative;">
+      <div id="paneLeft_${tab.id}" class="terminal-pane active-pane" onclick="focusTabPane(${jsArg(tab.id)}, 'left')" style="flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; border-radius: 6px; overflow: hidden; background: #000; position: relative;">
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-bottom: 1px solid var(--card-border); font-size: 0.72rem;">
           <span style="color: #38bdf8; font-family: monospace; font-weight: 600;">💻 ${escapeHtml(tab.hostName)}</span>
           <span id="statusLeft_${tab.id}" style="color: #34d399; font-size: 0.7rem;">● Connected</span>
@@ -7633,15 +7632,15 @@ function createTabWorkspaceDOM(tab) {
         <div id="termDivLeft_${tab.id}" class="terminal-container" style="flex: 1; height: 100%; padding: 4px;"></div>
       </div>
 
-      <div id="paneRight_${tab.id}" class="terminal-pane" onclick="focusTabPane('${tab.id}', 'right')" style="display: none; flex: 1; flex-direction: column; min-width: 0; height: 100%; border-radius: 6px; overflow: hidden; background: #000; position: relative;">
+      <div id="paneRight_${tab.id}" class="terminal-pane" onclick="focusTabPane(${jsArg(tab.id)}, 'right')" style="display: none; flex: 1; flex-direction: column; min-width: 0; height: 100%; border-radius: 6px; overflow: hidden; background: #000; position: relative;">
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-bottom: 1px solid var(--card-border); font-size: 0.72rem; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span style="color: #a78bfa; font-family: monospace; font-weight: 600;">💻 Split:</span>
-            <select id="splitSelect_${tab.id}" class="input" style="padding: 2px 6px; font-size: 0.72rem; width: auto; max-width: 160px;" onchange="onTabSplitHostChange('${tab.id}')"></select>
+            <select id="splitSelect_${tab.id}" class="input" style="padding: 2px 6px; font-size: 0.72rem; width: auto; max-width: 160px;" onchange="onTabSplitHostChange(${jsArg(tab.id)})"></select>
           </div>
           <div style="display: flex; align-items: center; gap: 6px;">
             <span id="statusRight_${tab.id}" style="color: #34d399; font-size: 0.7rem;">● Connected</span>
-            <button class="btn btn-sm" onclick="closeTabSplit('${tab.id}')" title="Close Split" style="padding: 0 5px; font-size: 0.7rem; line-height: 1.2;">✕</button>
+            <button class="btn btn-sm" onclick="closeTabSplit(${jsArg(tab.id)})" title="Close Split" style="padding: 0 5px; font-size: 0.7rem; line-height: 1.2;">✕</button>
           </div>
         </div>
         <div id="termDivRight_${tab.id}" class="terminal-container" style="flex: 1; height: 100%; padding: 4px;"></div>
@@ -8275,7 +8274,7 @@ function renderTabPresetsList(tabId, presets) {
   }
 
   listEl.innerHTML = presets.map(p => `
-    <div class="terminal-dropdown-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 8px;" onclick="triggerTabPreset('${tabId}', ${p.id})" title="${escapeHtml(p.command)} ${p.use_tmux ? '(tmux)' : ''}">
+    <div class="terminal-dropdown-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 8px;" onclick="triggerTabPreset(${jsArg(tabId)}, ${p.id})" title="${escapeHtml(p.command)} ${p.use_tmux ? '(tmux)' : ''}">
       <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
         <span style="color: #38bdf8; font-size: 0.75rem; flex-shrink: 0;">▶</span>
         <div style="min-width: 0; display: flex; flex-direction: column;">
@@ -8431,7 +8430,7 @@ function renderTerminalPinsList(tabId, hostId, pins) {
     const icon = pin.is_dir ? '📁' : '📄';
     const actionHint = pin.is_dir ? 'Click to cd' : 'Click to insert path';
     return `
-      <div class="terminal-dropdown-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 8px;" onclick="triggerPinAction('${tabId}', '${escapeHtml(pin.path)}', ${pin.is_dir})" title="${escapeHtml(actionHint)}">
+      <div class="terminal-dropdown-item" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 8px;" onclick="triggerPinAction(${jsArg(tabId)}, ${jsArg(pin.path)}, ${pin.is_dir})" title="${escapeHtml(actionHint)}">
         <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
           <span style="font-size: 0.85rem;">${icon}</span>
           <div style="min-width: 0; display: flex; flex-direction: column;">
@@ -8439,7 +8438,7 @@ function renderTerminalPinsList(tabId, hostId, pins) {
             ${pin.note ? `<span style="font-size: 0.68rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📝 ${escapeHtml(pin.note)}</span>` : ''}
           </div>
         </div>
-        <button class="btn btn-sm" onclick="event.stopPropagation(); deleteTerminalPin('${tabId}', ${hostId}, '${escapeHtml(pin.path)}')" title="Unpin" style="padding: 0 4px; font-size: 0.65rem; color: var(--text-muted); line-height: 1.2;">✕</button>
+        <button class="btn btn-sm" onclick="event.stopPropagation(); deleteTerminalPin(${jsArg(tabId)}, ${hostId}, ${jsArg(pin.path)})" title="Unpin" style="padding: 0 4px; font-size: 0.65rem; color: var(--text-muted); line-height: 1.2;">✕</button>
       </div>
     `;
   }).join('');
@@ -8703,7 +8702,7 @@ function renderRecentPorts(tabId) {
   if (!container) return;
   const ports = getRecentPorts();
   container.innerHTML = ports.map(p => `
-    <button class="btn btn-sm" onclick="event.stopPropagation(); openTunnelForPort('${tabId}', ${p})" style="padding: 2px 6px; font-size: 0.7rem; font-family: monospace; background: rgba(255,255,255,0.06); border: 1px solid var(--card-border);">
+    <button class="btn btn-sm" onclick="event.stopPropagation(); openTunnelForPort(${jsArg(tabId)}, ${p})" style="padding: 2px 6px; font-size: 0.7rem; font-family: monospace; background: rgba(255,255,255,0.06); border: 1px solid var(--card-border);">
       :${p}
     </button>
   `).join('');
@@ -10341,6 +10340,12 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// Argumen string untuk handler inline (onclick="f(${jsArg(x)})"): JSON.stringify membuat
+// literal JS yang sah untuk kutip, backslash dan baris baru; escapeHtml mengamankan atributnya.
+function jsArg(s) {
+  return escapeHtml(JSON.stringify(s == null ? '' : String(s)));
+}
+
 function escapeHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -10423,7 +10428,7 @@ function sanitizeHtml(htmlStr) {
     const isId = target.includes('.id.');
     const docName = isGuide ? 'guide' : 'readme';
     const docLang = isId ? 'id' : 'en';
-    return `href="javascript:void(0)" onclick="switchDoc('${docName}', '${docLang}')"`;
+    return `href="javascript:void(0)" onclick="switchDoc(${jsArg(docName)}, ${jsArg(docLang)})"`;
   });
   return clean;
 }
@@ -10472,14 +10477,14 @@ function parseMicroMarkdown(md) {
     formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, href) => {
       if (href.startsWith('#')) {
         const anchor = href.substring(1).replace(/[^a-zA-Z0-9_-]/g, '');
-        return `<a href="#${anchor}" onclick="scrollToDocAnchor('${anchor}'); return false;">${label}</a>`;
+        return `<a href="#${anchor}" onclick="scrollToDocAnchor(${jsArg(anchor)}); return false;">${label}</a>`;
       }
       if (href.includes('README') || href.includes('user-guide')) {
         const isGuide = href.includes('user-guide');
         const isId = href.includes('.id.');
         const docName = isGuide ? 'guide' : 'readme';
         const docLang = isId ? 'id' : 'en';
-        return `<a href="javascript:void(0)" onclick="switchDoc('${docName}', '${docLang}')">${label}</a>`;
+        return `<a href="javascript:void(0)" onclick="switchDoc(${jsArg(docName)}, ${jsArg(docLang)})">${label}</a>`;
       }
       return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
@@ -11129,7 +11134,7 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
               </div>
               <input type="hidden" id="${cid}_sourceHost" value="${activeSourceId || ''}" />
             ` : `
-              <select id="${cid}_sourceHost" class="input" style="height: 38px; box-sizing: border-box; width: 100%;" onchange="onNetDiagSourceChange('${cid}')">
+              <select id="${cid}_sourceHost" class="input" style="height: 38px; box-sizing: border-box; width: 100%;" onchange="onNetDiagSourceChange(${jsArg(cid)})">
                 ${availableSourceHosts.length === 0 ? `<option value="">-- No Online Hosts --</option>` : ''}
                 ${availableSourceHosts.map(h => `
                   <option value="${h.id}" ${h.id === activeSourceId ? 'selected' : ''}>
@@ -11147,10 +11152,10 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
                 <span>🎯</span> <span>${t('netdiag_target_mode')}</span>
               </label>
               <div style="display: inline-flex; background: #0f172a; border: 1px solid var(--card-border); border-radius: 6px; padding: 2px;">
-                <button type="button" class="btn btn-sm ${currentNetDiagTargetMode === 'inter_host' ? 'active' : ''}" id="${cid}_targetModeInter" onclick="setNetDiagTargetMode('${cid}', 'inter_host')" style="padding: 2px 8px; font-size: 0.72rem; ${currentNetDiagTargetMode === 'inter_host' ? 'background: #2563eb; color: #fff;' : 'background: transparent; color: var(--text-muted);'}">
+                <button type="button" class="btn btn-sm ${currentNetDiagTargetMode === 'inter_host' ? 'active' : ''}" id="${cid}_targetModeInter" onclick="setNetDiagTargetMode(${jsArg(cid)}, 'inter_host')" style="padding: 2px 8px; font-size: 0.72rem; ${currentNetDiagTargetMode === 'inter_host' ? 'background: #2563eb; color: #fff;' : 'background: transparent; color: var(--text-muted);'}">
                   ${t('netdiag_target_inter_host')}
                 </button>
-                <button type="button" class="btn btn-sm ${currentNetDiagTargetMode === 'custom' ? 'active' : ''}" id="${cid}_targetModeCustom" onclick="setNetDiagTargetMode('${cid}', 'custom')" style="padding: 2px 8px; font-size: 0.72rem; ${currentNetDiagTargetMode === 'custom' ? 'background: #2563eb; color: #fff;' : 'background: transparent; color: var(--text-muted);'}">
+                <button type="button" class="btn btn-sm ${currentNetDiagTargetMode === 'custom' ? 'active' : ''}" id="${cid}_targetModeCustom" onclick="setNetDiagTargetMode(${jsArg(cid)}, 'custom')" style="padding: 2px 8px; font-size: 0.72rem; ${currentNetDiagTargetMode === 'custom' ? 'background: #2563eb; color: #fff;' : 'background: transparent; color: var(--text-muted);'}">
                   ${t('netdiag_target_custom')}
                 </button>
               </div>
@@ -11167,9 +11172,9 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
             <div id="${cid}_customTargetContainer" style="${currentNetDiagTargetMode === 'custom' ? 'display: block;' : 'display: none;'}">
               <input type="text" id="${cid}_targetCustomInput" class="input" style="height: 38px; box-sizing: border-box; width: 100%; margin-bottom: 6px; font-family: monospace;" value="1.1.1.1" placeholder="${t('netdiag_target_ph')}" />
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.72rem; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;" onclick="setNetDiagPresetTarget('${cid}', '1.1.1.1')">1.1.1.1 (Cloudflare)</button>
-                <button type="button" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.72rem; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;" onclick="setNetDiagPresetTarget('${cid}', '8.8.8.8')">8.8.8.8 (Google)</button>
-                <button type="button" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.72rem; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;" onclick="setNetDiagPresetTarget('${cid}', 'google.com')">google.com</button>
+                <button type="button" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.72rem; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;" onclick="setNetDiagPresetTarget(${jsArg(cid)}, '1.1.1.1')">1.1.1.1 (Cloudflare)</button>
+                <button type="button" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.72rem; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;" onclick="setNetDiagPresetTarget(${jsArg(cid)}, '8.8.8.8')">8.8.8.8 (Google)</button>
+                <button type="button" class="btn btn-sm" style="padding: 2px 6px; font-size: 0.72rem; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd;" onclick="setNetDiagPresetTarget(${jsArg(cid)}, 'google.com')">google.com</button>
               </div>
             </div>
           </div>
@@ -11182,16 +11187,16 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
               <span>🛠️</span> <span>${t('netdiag_tool')}</span>
             </label>
             <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">
-              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'ping' ? 'btn-primary' : ''}" id="${cid}_tool_ping" onclick="setNetDiagTool('${cid}', 'ping')">
+              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'ping' ? 'btn-primary' : ''}" id="${cid}_tool_ping" onclick="setNetDiagTool(${jsArg(cid)}, 'ping')">
                 📡 ${t('netdiag_tool_ping')}
               </button>
-              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'traceroute' ? 'btn-primary' : ''}" id="${cid}_tool_traceroute" onclick="setNetDiagTool('${cid}', 'traceroute')">
+              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'traceroute' ? 'btn-primary' : ''}" id="${cid}_tool_traceroute" onclick="setNetDiagTool(${jsArg(cid)}, 'traceroute')">
                 🛤️ ${t('netdiag_tool_traceroute')}
               </button>
-              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'port_probe' ? 'btn-primary' : ''}" id="${cid}_tool_port_probe" onclick="setNetDiagTool('${cid}', 'port_probe')">
+              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'port_probe' ? 'btn-primary' : ''}" id="${cid}_tool_port_probe" onclick="setNetDiagTool(${jsArg(cid)}, 'port_probe')">
                 🔌 ${t('netdiag_tool_port')}
               </button>
-              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'dns_resolve' ? 'btn-primary' : ''}" id="${cid}_tool_dns_resolve" onclick="setNetDiagTool('${cid}', 'dns_resolve')">
+              <button type="button" class="btn btn-sm ${currentNetDiagTool === 'dns_resolve' ? 'btn-primary' : ''}" id="${cid}_tool_dns_resolve" onclick="setNetDiagTool(${jsArg(cid)}, 'dns_resolve')">
                 🔍 ${t('netdiag_tool_dns')}
               </button>
             </div>
@@ -11217,7 +11222,7 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
 
           <!-- Submit Button -->
           <div style="display: flex; align-items: flex-end; margin-left: auto;">
-            <button class="btn btn-primary" id="${cid}_runBtn" onclick="runNetDiag('${cid}')" style="min-width: 140px; height: 36px; font-weight: 600;">
+            <button class="btn btn-primary" id="${cid}_runBtn" onclick="runNetDiag(${jsArg(cid)})" style="min-width: 140px; height: 36px; font-weight: 600;">
               ${t('netdiag_run_btn')}
             </button>
           </div>
@@ -11230,7 +11235,7 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
           <div class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></div>
           <span id="${cid}_statusText" style="color: #60a5fa; font-weight: 500;">${t('netdiag_running')}</span>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="abortNetDiag('${cid}')" style="padding: 2px 8px; font-size: 0.75rem;">Cancel</button>
+        <button class="btn btn-sm btn-danger" onclick="abortNetDiag(${jsArg(cid)})" style="padding: 2px 8px; font-size: 0.75rem;">Cancel</button>
       </div>
 
       <!-- Automated Diagnosis Banner (Auto-Diagnosis) -->
@@ -11255,10 +11260,10 @@ function renderNetDiagUI(container, contextPrefix, defaultSourceId, isSourceLock
       <!-- Raw CLI Output Accordion -->
       <div id="${cid}_rawSection" style="display: none; margin-top: 4px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); cursor: pointer;" onclick="toggleNetDiagRaw('${cid}')">
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); cursor: pointer;" onclick="toggleNetDiagRaw(${jsArg(cid)})">
             <span>📋</span> <span>${t('netdiag_raw_output')}</span> <span id="${cid}_rawToggleIcon">▼</span>
           </label>
-          <button class="btn btn-sm" onclick="copyNetDiagRaw('${cid}')" style="padding: 2px 8px; font-size: 0.72rem;">
+          <button class="btn btn-sm" onclick="copyNetDiagRaw(${jsArg(cid)})" style="padding: 2px 8px; font-size: 0.72rem;">
             ${t('netdiag_copy_raw')}
           </button>
         </div>
