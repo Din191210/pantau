@@ -378,6 +378,23 @@ func (d *DB) migrate() error {
 		UNIQUE(host_id, path)
 	);
 	CREATE INDEX IF NOT EXISTS idx_host_file_pins_host ON host_file_pins(host_id);
+
+	CREATE TABLE IF NOT EXISTS security_events (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		dedup_key TEXT NOT NULL UNIQUE,
+		source TEXT NOT NULL,
+		category TEXT NOT NULL,
+		severity TEXT NOT NULL,
+		title TEXT NOT NULL,
+		detail TEXT NOT NULL DEFAULT '',
+		host TEXT NOT NULL DEFAULT '',
+		ref TEXT NOT NULL DEFAULT '',
+		count INTEGER NOT NULL DEFAULT 1,
+		first_seen DATETIME NOT NULL,
+		last_seen DATETIME NOT NULL,
+		acknowledged_at DATETIME
+	);
+	CREATE INDEX IF NOT EXISTS idx_security_events_open ON security_events(acknowledged_at, last_seen DESC);
 	`
 	_, err := d.Exec(schema)
 	if err != nil {

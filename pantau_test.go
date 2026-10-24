@@ -2002,3 +2002,102 @@ func TestHardening_PasswordChangeEndsOtherSessions(t *testing.T) {
 		t.Fatalf("changing session got %d, want 200 (re-issued)", code)
 	}
 }
+
+// Security center: ingest auth, validation, dedup, popup/reopen rules, ack.
+func TestSecurityCenter_IngestDedupPopupAck(t *testing.T) {
+	env := setupTestEnv(t)
+	const tok = "0123456789abcdef0123456789abcdef0123456789abcdef"
+	env.server.SetSecurityIngest(tok, false, "")
+	client := loginClient(t, env)
+
+	ingest := func(token string, body any) (int, map[string]any) {
+		b, _ := json.Marshal(body)
+		req, _ := http.NewRequest(http.MethodPost, env.httpServer.URL+"/api/security/ingest", bytes.NewReader(b))
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		var out map[string]any
+		_ = json.NewDecoder(resp.Body).Decode(&out)
+		return resp.StatusCode, out
+	}
+	attack := map[string]string{"dedup_key": "wazuh:5763:10.0.0.9", "source": "wazuh", "category": "attack",
+		"severity": "high", "title": "sshd brute force <script>", "host": "nemesis", "ref": "5763"}
+	vuln := map[string]string{"dedup_key": "cve:CVE-2026-109618:img:php-cli", "source": "cve-sentinel",
+		"category": "vulnerability", "severity": "critical", "title": "CVE-2026-109618 php-cli 5.6.40"}
+
+	if code, _ := ingest("", attack); code != http.StatusUnauthorized {
+		t.Fatalf("no token: got %d, want 401", code)
+	}
+	if code, _ := ingest("wrong-token-wrong-token-wrong-token!!", attack); code != http.StatusUnauthorized {
+		t.Fatalf("bad token: got %d, want 401", code)
+	}
+	bad := map[string]string{"source": "wazuh", "category": "attack", "severity": "apocalyptic", "title": "x"}
+	if _, out := ingest(tok, bad); out["accepted"].(float64) != 0 {
+		t.Fatalf("invalid severity accepted: %v", out)
+	}
+
+	// New events alert; a repeat of an open event does not.
+	if _, out := ingest(tok, map[string]any{"events": []any{attack, vuln}}); out["accepted"].(float64) != 2 || out["alerts"].(float64) != 2 {
+		t.Fatalf("first ingest: %v", out)
+	}
+	if _, out := ingest(tok, attack); out["alerts"].(float64) != 0 {
+		t.Fatalf("repeat of open event must not alert: %v", out)
+	}
+
+	get := func(path string, v any) {
+		resp, err := client.Get(env.httpServer.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("%s: %d", path, resp.StatusCode)
+		}
+		_ = json.NewDecoder(resp.Body).Decode(v)
+	}
+	var events []store.SecurityEvent
+	get("/api/security/events", &events)
+	if len(events) != 2 || events[0].Severity != "critical" {
+		t.Fatalf("expected critical first, got %+v", events)
+	}
+	var attackEv store.SecurityEvent
+	for _, e := range events {
+		if e.Source == "wazuh" {
+			attackEv = e
+		}
+	}
+	if attackEv.Count != 2 || attackEv.Title != "sshd brute force <script>" {
+		t.Fatalf("dedup/count wrong: %+v", attackEv)
+	}
+
+	// Ack everything, then: attack recurrence reopens + alerts, vulnerability stays acknowledged.
+	resp, _ := client.Post(env.httpServer.URL+"/api/security/ack-all", "application/json", nil)
+	resp.Body.Close()
+	var counts map[string]int
+	get("/api/security/summary", &counts)
+	if counts["critical"]+counts["high"] != 0 {
+		t.Fatalf("after ack-all expected no open events, got %v", counts)
+	}
+	if _, out := ingest(tok, vuln); out["alerts"].(float64) != 0 {
+		t.Fatalf("acknowledged vulnerability re-reported nightly must stay quiet: %v", out)
+	}
+	if _, out := ingest(tok, attack); out["alerts"].(float64) != 1 {
+		t.Fatalf("recurring attack after ack must alert again: %v", out)
+	}
+	get("/api/security/summary", &counts)
+	if counts["high"] != 1 || counts["critical"] != 0 {
+		t.Fatalf("expected only the attack reopened, got %v", counts)
+	}
+
+	// Anonymous dashboard access is refused.
+	r2, _ := http.Get(env.httpServer.URL + "/api/security/events")
+	r2.Body.Close()
+	if r2.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("anonymous events got %d, want 401", r2.StatusCode)
+	}
+}

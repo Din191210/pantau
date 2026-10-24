@@ -95,6 +95,9 @@ type Server struct {
 	inspectAllActive  bool
 	lastInspectAll    time.Time
 	secureCookies     bool // set when served behind TLS
+	ingestToken       string
+	desktop           *desktopNotifier
+	secHub            secHub
 	loginMu           sync.Mutex
 	loginFails        map[string]*loginFailure // client IP -> recent failures
 }
@@ -297,6 +300,10 @@ func (s *Server) routes() {
 
 	// Network Diagnostics (ADR Network Diagnostic)
 	s.mux.HandleFunc("/api/netdiag/stream", s.authMiddleware(s.handleNetDiagStream))
+
+	// Security center: local feeders post with a bearer token; the dashboard reads with a session.
+	s.mux.HandleFunc("/api/security/ingest", s.handleSecurityIngest)
+	s.mux.HandleFunc("/api/security/", s.authMiddleware(s.handleSecurityRoute))
 }
 
 func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {

@@ -121,7 +121,23 @@ jalankan ulang test (`TestHardening_*` menjaga tambalan tetap ada).
 
 Rollback: `systemctl --user disable --now pantau`; data ada di `~/.local/share/pantau/`.
 
-## 7. Untuk rencana IISOP
+## 7. Pusat Keamanan (tambahan fork, v0.25.0-purbalingga.3)
+
+Menyatukan CVE-Sentinel, Wazuh, dan Suricata dalam satu daftar dengan popup otomatis.
+
+- Data: tabel `security_events` (dedup per `dedup_key`, hitungan kejadian, retensi 90 hari).
+- Masukan: `POST /api/security/ingest`, hanya dari loopback dan wajib bearer token dari
+  `<db>.ingest-token` (0600). Validasi source/category/severity, batas 1 MB dan 500 event.
+- Popup: event critical/high yang baru, naik severity, atau serangan/perubahan berkas yang
+  muncul lagi setelah ditangani. Lewat SSE ke dasbor, Notification API browser saat tab di
+  latar, dan `notify-send` di desktop server (maks 5/menit, isi di-escape). Klik notifikasi
+  desktop membuka `http://127.0.0.1:18090/#security-<id>` langsung ke detailnya.
+- Dasbor: tombol perisai di header dengan badge; daftar bisa difilter, ditandai ditangani.
+- Test: `TestSecurityCenter_IngestDedupPopupAck`; E2E Playwright (popup tanpa reload,
+  judul berisi HTML tetap teks, tanpa overflow di 375px, tautan detail).
+- Pemasangan Wazuh/Suricata: `~/projects/keamanan-terpadu/`.
+
+## 8. Untuk rencana IISOP
 
 | Kemampuan Pantau | Keputusan | Alasan |
 |---|---|---|

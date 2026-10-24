@@ -1126,6 +1126,31 @@ body.has-workspace-shelf .container {
   border-radius: 9999px;
   line-height: 1;
 }
+
+/* Security center (fork Purbalingga) */
+.sec-btn { position: relative; }
+.sec-badge { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #b91c1c; color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 18px; text-align: center; }
+.sec-badge.sec-badge-high { background: #c2410c; }
+.sec-badge.sec-badge-calm { background: #334155; }
+.sec-sev { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.sec-sev-critical { color: #fca5a5; } .sec-sev-high { color: #fdba74; } .sec-sev-medium { color: #fcd34d; } .sec-sev-low { color: #cbd5e1; }
+.sec-row { border: 1px solid var(--card-border); border-left: 4px solid #64748b; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; background: rgba(15, 23, 42, 0.45); }
+.sec-row.critical { border-left-color: #ef4444; } .sec-row.high { border-left-color: #f97316; } .sec-row.medium { border-left-color: #f59e0b; }
+.sec-row.acked { opacity: 0.6; }
+.sec-row.focus { outline: 2px solid #38bdf8; outline-offset: 2px; opacity: 1; }
+.sec-row-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.sec-row-title { font-weight: 600; flex: 1 1 240px; overflow-wrap: anywhere; }
+.sec-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.sec-detail { margin-top: 6px; font-family: ui-monospace, monospace; font-size: 0.76rem; white-space: pre-wrap; overflow-wrap: anywhere; color: #cbd5e1; max-height: 220px; overflow: auto; }
+.sec-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.sec-chip { font-size: 0.78rem; padding: 3px 9px; border-radius: 6px; background: rgba(148, 163, 184, 0.12); }
+#secPopups { position: fixed; top: 64px; right: 16px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; width: min(380px, calc(100vw - 32px)); }
+.sec-popup { background: #1e293b; border: 1px solid var(--card-border); border-left: 5px solid #f97316; border-radius: 10px; padding: 12px 14px; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55); }
+.sec-popup.critical { border-left-color: #ef4444; }
+.sec-popup-title { font-weight: 600; margin: 4px 0; overflow-wrap: anywhere; }
+.sec-popup-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+@media (prefers-reduced-motion: no-preference) { .sec-popup { animation: secIn 0.18s ease-out; } }
+@keyframes secIn { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
 </style>
 </head>
 <body>
@@ -1268,6 +1293,7 @@ body.has-workspace-shelf .container {
       </div>
       <div class="header-divider"></div>
       <div class="header-cluster">
+        <button class="btn btn-icon sec-btn" id="btnHeaderSecurity" onclick="openSecurityModal()" title="Security Center" aria-label="Security Center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="secBadge" class="sec-badge sec-badge-calm" hidden>0</span></button>
         <span id="activeAlertBadge" style="display: none; cursor: pointer;" class="badge badge-down" onclick="toggleAlertOverlay(event)" title="Click to view alerts">0 ALERTS</span>
         <button class="btn btn-icon" id="btnInspectAll" onclick="inspectAllHosts()" title="Inspect All Hosts" data-i18n-title="btn_inspect_all_title" aria-label="Inspect All Hosts">
           <svg id="inspectAllIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
@@ -1447,6 +1473,38 @@ body.has-workspace-shelf .container {
 </div>
 
 <!-- Generic Confirmation Modal (Action Dialog) -->
+<!-- Security Center: CVE-Sentinel + Wazuh + Suricata -->
+<div id="securityModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="securityModalTitle">
+  <div class="modal-content" style="width: 100%; max-width: 980px; max-height: 90vh;">
+    <div class="modal-header">
+      <h3 id="securityModalTitle">Security Center</h3>
+      <button class="btn btn-sm" onclick="closeModal('securityModal')" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" style="overflow: auto;">
+      <div class="sec-toolbar">
+        <span id="secSummary" class="sec-toolbar" style="margin: 0;"></span>
+        <span style="flex: 1;"></span>
+        <label style="font-size: 0.8rem; display: inline-flex; gap: 6px; align-items: center;"><span id="secFilterLabel">Show</span>
+          <select id="secStatusFilter" onchange="loadSecurityEvents()" style="width: auto;">
+            <option value="open" id="secOptOpen">Open</option>
+            <option value="all" id="secOptAll">All (90 days)</option>
+          </select>
+        </label>
+        <select id="secSourceFilter" onchange="renderSecurityEvents()" aria-label="Source" style="width: auto;">
+          <option value="">All sources</option>
+          <option value="cve-sentinel">CVE-Sentinel</option>
+          <option value="wazuh">Wazuh</option>
+          <option value="suricata">Suricata</option>
+        </select>
+        <button class="btn btn-sm" id="secNotifyBtn" onclick="enableSecurityNotifications()">Enable browser popups</button>
+        <button class="btn btn-sm btn-warning" id="secAckAllBtn" onclick="ackSecurity(0)">Acknowledge all</button>
+      </div>
+      <div id="securityList" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+<div id="secPopups" role="region" aria-label="Security alerts"></div>
+
 <div id="confirmModal" class="modal">
   <div class="modal-content modal-dialog" style="max-width: 440px;">
     <div class="modal-header">
@@ -3634,6 +3692,7 @@ function setLanguage(lang) {
   currentLang = lang === 'id' ? 'id' : 'en';
   localStorage.setItem('pantau_lang', currentLang);
   document.documentElement.lang = currentLang;
+  if (typeof applySecurityTexts === 'function') applySecurityTexts();
 
   const btn = document.getElementById('langToggleBtn');
   if (btn) btn.innerText = currentLang === 'en' ? '🌐 EN' : '🌐 ID';
@@ -3722,6 +3781,7 @@ async function checkAuth() {
     checkInspectAllStatus();
     setTimeout(() => checkForUpdates(false), 2000);
     connectActivityEventSource();
+    initSecurityCenter();
   } else {
     document.getElementById('loginView').style.display = 'flex';
     document.getElementById('appView').style.display = 'none';
@@ -3749,6 +3809,10 @@ async function doLogin() {
       return;
     }
     checkAuth();
+  } else if (res.status === 429) {
+    const data = await res.json().catch(() => ({}));
+    const mins = Math.max(1, Math.ceil((data.retry_after_seconds || 900) / 60));
+    document.getElementById('loginErr').innerText = t('invalid_password_locked', 'Too many attempts. Try again in {n} minutes.').replace('{n}', mins);
   } else {
     document.getElementById('loginErr').innerText = t('invalid_password', 'Invalid password');
   }
@@ -9350,8 +9414,9 @@ async function loadSettingsPresets() {
 
 // Global terminal listeners
 window.addEventListener('resize', () => {
-  if (fitAddonLeft) fitAddonLeft.fit();
-  if (fitAddonRight) fitAddonRight.fit();
+  // Undeclared until a split terminal exists; a bare reference threw on every resize.
+  if (typeof fitAddonLeft !== 'undefined' && fitAddonLeft) fitAddonLeft.fit();
+  if (typeof fitAddonRight !== 'undefined' && fitAddonRight) fitAddonRight.fit();
 });
 
 window.addEventListener('keydown', (e) => {
@@ -12334,6 +12399,245 @@ function renderHostCompareView() {
 
   html += `</div>`;
   container.innerHTML = html;
+}
+
+// ---- Security Center (fork Purbalingga) -------------------------------------------
+// Events arrive from CVE-Sentinel and Wazuh (Suricata travels inside Wazuh) via
+// /api/security/ingest. New critical/high events pop up here, as a browser notification
+// when the tab is in the background, and on the server desktop (done server-side).
+Object.assign(I18N.id, {
+  sec_title: 'Pusat Keamanan', sec_open: 'Terbuka', sec_all: 'Semua (90 hari)', sec_show: 'Tampilkan',
+  sec_all_sources: 'Semua sumber', sec_enable_popups: 'Aktifkan popup browser', sec_popups_on: 'Popup browser aktif',
+  sec_popups_blocked: 'Popup diblokir browser', sec_ack_all: 'Tandai semua ditangani', sec_ack: 'Tandai ditangani',
+  sec_view: 'Lihat', sec_close: 'Tutup', sec_empty_open: 'Tidak ada temuan terbuka.', sec_empty_all: 'Belum ada temuan.',
+  sec_first: 'Pertama', sec_last: 'Terakhir', sec_times: 'kali', sec_handled: 'Ditangani',
+  sec_cat_vulnerability: 'Celah keamanan', sec_cat_attack: 'Serangan', sec_cat_integrity: 'Perubahan berkas', sec_cat_system: 'Sistem',
+  sec_pending: 'temuan kritis/tinggi belum ditangani', sec_confirm_ack_all: 'Tandai semua temuan terbuka sebagai ditangani?',
+  sec_new_alert: 'Peringatan keamanan', invalid_password_locked: 'Terlalu banyak percobaan. Coba lagi dalam {n} menit.'
+});
+
+let secLastEvents = [];
+let secUnseen = 0;
+const secBaseTitle = document.title;
+
+function secCategoryLabel(c) {
+  return t('sec_cat_' + c, { vulnerability: 'Vulnerability', attack: 'Attack', integrity: 'File change', system: 'System' }[c] || c);
+}
+
+function secTime(s) {
+  const d = new Date(s);
+  return isNaN(d) ? '' : d.toLocaleString(currentLang === 'id' ? 'id-ID' : undefined);
+}
+
+function applySecurityTexts() {
+  const set = (id, key, fb) => { const el = document.getElementById(id); if (el) el.textContent = t(key, fb); };
+  set('securityModalTitle', 'sec_title', 'Security Center');
+  set('secFilterLabel', 'sec_show', 'Show');
+  set('secOptOpen', 'sec_open', 'Open');
+  set('secOptAll', 'sec_all', 'All (90 days)');
+  set('secAckAllBtn', 'sec_ack_all', 'Acknowledge all');
+  const src = document.querySelector('#secSourceFilter option[value=""]');
+  if (src) src.textContent = t('sec_all_sources', 'All sources');
+  const btn = document.getElementById('btnHeaderSecurity');
+  if (btn) { btn.title = t('sec_title', 'Security Center'); btn.setAttribute('aria-label', btn.title); }
+  updateSecurityNotifyButton();
+}
+
+function updateSecurityNotifyButton() {
+  const b = document.getElementById('secNotifyBtn');
+  if (!b) return;
+  if (!('Notification' in window)) { b.hidden = true; return; }
+  const p = Notification.permission;
+  b.disabled = p !== 'default';
+  b.textContent = p === 'granted' ? t('sec_popups_on', 'Browser popups on')
+    : p === 'denied' ? t('sec_popups_blocked', 'Popups blocked by browser')
+    : t('sec_enable_popups', 'Enable browser popups');
+}
+
+async function enableSecurityNotifications() {
+  if ('Notification' in window) await Notification.requestPermission();
+  updateSecurityNotifyButton();
+}
+
+async function loadSecuritySummary() {
+  try {
+    const res = await fetch('/api/security/summary');
+    if (!res.ok) return null;
+    const c = await res.json();
+    const urgent = (c.critical || 0) + (c.high || 0);
+    const total = urgent + (c.medium || 0) + (c.low || 0);
+    const badge = document.getElementById('secBadge');
+    badge.hidden = total === 0;
+    badge.textContent = urgent || total;
+    badge.className = 'sec-badge ' + (c.critical ? '' : c.high ? 'sec-badge-high' : 'sec-badge-calm');
+    const sum = document.getElementById('secSummary');
+    if (sum) {
+      sum.innerHTML = ['critical', 'high', 'medium', 'low'].map(s =>
+        `<span class="sec-chip"><span class="sec-sev sec-sev-${s}">${s}</span> ${c[s] || 0}</span>`).join('');
+    }
+    return c;
+  } catch (e) { return null; }
+}
+
+// focusId: open that finding's detail (from a popup or a #security-<id> link).
+async function openSecurityModal(focusId) {
+  applySecurityTexts();
+  const id = Number(focusId);
+  if (id > 0) {
+    // It may already be acknowledged, so look in the full list.
+    document.getElementById('secStatusFilter').value = 'all';
+    document.getElementById('secSourceFilter').value = '';
+  }
+  await loadSecurityEvents();
+  openModal('securityModal');
+  if (id > 0) {
+    const row = document.querySelector(`#securityList .sec-row[data-id="${id}"]`);
+    if (row) {
+      row.classList.add('focus');
+      row.querySelector('details')?.setAttribute('open', '');
+      row.scrollIntoView({ block: 'center' });
+    }
+  }
+}
+
+function openSecurityFromHash() {
+  const m = /^#security(?:-(\d+))?$/.exec(location.hash);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  openSecurityModal(m[1]);
+}
+window.addEventListener('hashchange', () => { if (securityCenterStarted) openSecurityFromHash(); });
+
+async function loadSecurityEvents() {
+  const status = document.getElementById('secStatusFilter').value;
+  try {
+    const res = await fetch('/api/security/events?status=' + encodeURIComponent(status));
+    secLastEvents = res.ok ? await res.json() : [];
+  } catch (e) { secLastEvents = []; }
+  renderSecurityEvents();
+  loadSecuritySummary();
+}
+
+function renderSecurityEvents() {
+  const list = document.getElementById('securityList');
+  const src = document.getElementById('secSourceFilter').value;
+  const rows = (secLastEvents || []).filter(e => !src || e.source === src);
+  if (!rows.length) {
+    const open = document.getElementById('secStatusFilter').value === 'open';
+    list.innerHTML = `<p style="color: var(--text-muted);">${escapeHtml(open ? t('sec_empty_open', 'No open findings.') : t('sec_empty_all', 'No findings yet.'))}</p>`;
+    return;
+  }
+  list.innerHTML = rows.map(e => `
+    <div class="sec-row ${escapeHtml(e.severity)} ${e.acknowledged_at ? 'acked' : ''}" data-id="${Number(e.id)}">
+      <div class="sec-row-head">
+        <span class="sec-sev sec-sev-${escapeHtml(e.severity)}">${escapeHtml(e.severity)}</span>
+        <span class="sec-row-title">${escapeHtml(e.title)}</span>
+        ${e.acknowledged_at ? `<span class="sec-chip">${escapeHtml(t('sec_handled', 'Handled'))}</span>`
+          : `<button class="btn btn-sm" onclick="ackSecurity(${Number(e.id)})">${escapeHtml(t('sec_ack', 'Acknowledge'))}</button>`}
+      </div>
+      <div class="sec-meta">
+        <span>${escapeHtml(e.source)} · ${escapeHtml(secCategoryLabel(e.category))}</span>
+        ${e.host ? `<span>${escapeHtml(e.host)}</span>` : ''}
+        ${e.ref ? `<span>${escapeHtml(e.ref)}</span>` : ''}
+        <span>${Number(e.count)}× ${escapeHtml(t('sec_times', 'times'))}</span>
+        <span>${escapeHtml(t('sec_first', 'First'))}: ${escapeHtml(secTime(e.first_seen))}</span>
+        <span>${escapeHtml(t('sec_last', 'Last'))}: ${escapeHtml(secTime(e.last_seen))}</span>
+      </div>
+      ${e.detail ? `<details><summary style="cursor: pointer; font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Detail</summary><div class="sec-detail">${escapeHtml(e.detail)}</div></details>` : ''}
+    </div>`).join('');
+}
+
+async function ackSecurity(id) {
+  if (id === 0 && !(await showConfirm({ message: t('sec_confirm_ack_all', 'Acknowledge every open finding?'), danger: false }))) return;
+  await fetch(id === 0 ? '/api/security/ack-all' : '/api/security/ack/' + id, { method: 'POST' });
+  document.querySelectorAll('.sec-popup').forEach(p => { if (id === 0 || p.dataset.id === String(id)) p.remove(); });
+  if (document.getElementById('securityModal').classList.contains('open')) loadSecurityEvents();
+  else loadSecuritySummary();
+}
+
+function dismissSecurityPopup(el) {
+  el.remove();
+}
+
+function showSecurityPopup(e) {
+  const box = document.getElementById('secPopups');
+  // Same finding twice (e.g. two tabs, reconnect): keep one card.
+  box.querySelectorAll('.sec-popup').forEach(p => { if (p.dataset.id === String(e.id)) p.remove(); });
+  while (box.children.length >= 4) box.lastElementChild.remove();
+  const card = document.createElement('div');
+  card.className = 'sec-popup ' + (e.severity === 'critical' ? 'critical' : 'high');
+  card.dataset.id = String(e.id);
+  card.setAttribute('role', 'alert');
+  card.innerHTML = `
+    <div class="sec-row-head"><span class="sec-sev sec-sev-${escapeHtml(e.severity)}">${escapeHtml(e.severity)}</span>
+      <span style="font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(e.source)} · ${escapeHtml(secCategoryLabel(e.category))}</span></div>
+    <div class="sec-popup-title">${escapeHtml(e.title)}</div>
+    ${e.host ? `<div class="sec-meta">${escapeHtml(e.host)}</div>` : ''}
+    <div class="sec-popup-actions">
+      <button class="btn btn-sm" data-act="close">${escapeHtml(t('sec_close', 'Close'))}</button>
+      <button class="btn btn-sm" data-act="ack">${escapeHtml(t('sec_ack', 'Acknowledge'))}</button>
+      <button class="btn btn-sm btn-primary" data-act="view">${escapeHtml(t('sec_view', 'View'))}</button>
+    </div>`;
+  card.querySelector('[data-act="close"]').onclick = () => dismissSecurityPopup(card);
+  card.querySelector('[data-act="ack"]').onclick = () => ackSecurity(e.id);
+  card.querySelector('[data-act="view"]').onclick = () => { dismissSecurityPopup(card); openSecurityModal(e.id); };
+  box.prepend(card);
+  // Critical stays until handled; high fades after a minute (still listed in the center).
+  if (e.severity !== 'critical') setTimeout(() => card.isConnected && card.remove(), 60000);
+}
+
+function notifySecurityBrowser(e) {
+  if (!('Notification' in window) || Notification.permission !== 'granted' || !document.hidden) return;
+  try {
+    const n = new Notification(`${t('sec_new_alert', 'Security alert')}: ${e.severity.toUpperCase()}`, {
+      body: e.title + (e.host ? '\n' + e.host : ''), tag: 'pantau-sec-' + e.id, requireInteraction: e.severity === 'critical'
+    });
+    n.onclick = () => { window.focus(); openSecurityModal(e.id); n.close(); };
+  } catch (err) { /* some browsers only allow notifications from a service worker */ }
+}
+
+function markSecurityUnseen() {
+  if (!document.hidden) return;
+  secUnseen++;
+  document.title = `(${secUnseen}) ⚠ ${secBaseTitle}`;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && secUnseen) { secUnseen = 0; document.title = secBaseTitle; }
+});
+
+function connectSecurityStream() {
+  const es = new EventSource('/api/security/stream');
+  es.onmessage = (m) => {
+    let msg;
+    try { msg = JSON.parse(m.data); } catch (err) { return; }
+    loadSecuritySummary();
+    if (document.getElementById('securityModal').classList.contains('open')) loadSecurityEvents();
+    if (msg.type === 'event' && msg.popup && msg.event) {
+      showSecurityPopup(msg.event);
+      notifySecurityBrowser(msg.event);
+      markSecurityUnseen();
+    }
+  };
+}
+
+let securityCenterStarted = false;
+async function initSecurityCenter() {
+  if (securityCenterStarted) return;
+  securityCenterStarted = true;
+  applySecurityTexts();
+  connectSecurityStream();
+  setInterval(loadSecuritySummary, 60000);
+  if (location.hash.startsWith('#security')) { openSecurityFromHash(); return; }
+  // On login, surface anything urgent that arrived while nobody was watching.
+  const c = await loadSecuritySummary();
+  const urgent = c ? (c.critical || 0) + (c.high || 0) : 0;
+  if (urgent > 0) {
+    showSecurityPopup({ id: 'pending', severity: c.critical ? 'critical' : 'high', source: 'Pantau', category: 'system',
+      title: `${urgent} ${t('sec_pending', 'critical/high findings not yet handled')}`, host: '' });
+    const card = document.querySelector('.sec-popup[data-id="pending"]');
+    if (card) card.querySelector('[data-act="ack"]').remove();
+  }
 }
 
 setLanguage(currentLang);

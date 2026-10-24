@@ -333,6 +333,11 @@ func main() {
 	server := web.NewServer(db, ins, dispatcher)
 	server.SetVersion(ver)
 	server.SetSecureCookies(os.Getenv("PANTAU_SECURE_COOKIES") == "true")
+	ingestToken, err := store.EnsureIngestToken(dbPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Failed to prepare security ingest token: %v\n", err)
+		os.Exit(1)
+	}
 	server.SetSnapshotManager(snapshotMgr)
 	server.SetUpdaterManager(updaterMgr)
 	server.SetDocsFS(embeddedDocs)
@@ -342,6 +347,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "❌ Failed to bind port: %v\n", err)
 		os.Exit(1)
 	}
+	server.SetSecurityIngest(ingestToken, os.Getenv("PANTAU_DESKTOP_NOTIFY") != "false", fmt.Sprintf("http://127.0.0.1:%d", port))
 
 	if guard != nil {
 		_ = guard.UpdatePort(port)
