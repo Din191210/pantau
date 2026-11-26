@@ -192,6 +192,7 @@ func main() {
 	legacySSHFlag := flag.Bool("legacy-ssh", os.Getenv("PANTAU_LEGACY_SSH") == "true", "Allow SHA-1/CBC/DSA SSH algorithms for CentOS 5/6-era hosts [env: PANTAU_LEGACY_SSH]")
 	portFlag := flag.Int("port", 8080, "HTTP server port")
 	dbFlag := flag.String("db", "pantau.db", "SQLite database file path")
+	desktopFlag := flag.Bool("desktop", desktopAvailable, "Open Pantau in a native window (only in builds with -tags desktop)")
 	openBrowserFlag := flag.Bool("open", runtime.GOOS == "windows", "Open default browser on start")
 	resetPasswordFlag := flag.Bool("reset-password", false, "Set a new random admin password (written to <db>.admin-password) and exit")
 	disable2FAFlag := flag.Bool("disable-2fa", false, "Emergency bypass flag to disable 2FA")
@@ -292,7 +293,12 @@ func main() {
 		} else {
 			fmt.Printf("ℹ️ Pantau is already running on http://localhost:%d\n", activePort)
 		}
-		if *openBrowserFlag {
+		if *desktopFlag && desktopAvailable {
+			// The database is single-owner, so attach a window to the running instance.
+			quit := make(chan os.Signal, 1)
+			signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+			runDesktop(fmt.Sprintf("http://127.0.0.1:%d", activePort), quit)
+		} else if *openBrowserFlag {
 			openBrowser(fmt.Sprintf("http://localhost:%d", activePort))
 		}
 		os.Exit(0)
@@ -393,7 +399,10 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	if *openBrowserFlag {
+	if *desktopFlag && !desktopAvailable {
+		fmt.Fprintln(os.Stderr, "⚠️ -desktop needs a build with -tags desktop; continuing in web mode")
+	}
+	if *openBrowserFlag && !*desktopFlag {
 		go func() {
 			time.Sleep(150 * time.Millisecond)
 			openBrowser(fmt.Sprintf("http://localhost:%d", port))
@@ -402,7 +411,11 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	<-quit
+	if *desktopFlag && desktopAvailable {
+		runDesktop(fmt.Sprintf("http://127.0.0.1:%d", port), quit)
+	} else {
+		<-quit
+	}
 	fmt.Println("\nShutting down Pantau...")
 	logger.Info("system", "", "Shutting down Pantau...")
 
