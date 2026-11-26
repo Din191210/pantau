@@ -179,7 +179,6 @@ func listenPort(host string, port int, portExplicit bool) (net.Listener, int, er
 	return nil, port, fmt.Errorf("ports %d-%d are all in use", port, port+19)
 }
 
-
 func main() {
 	updater.CleanOldArtifacts()
 
@@ -194,6 +193,7 @@ func main() {
 	portFlag := flag.Int("port", 8080, "HTTP server port")
 	dbFlag := flag.String("db", "pantau.db", "SQLite database file path")
 	openBrowserFlag := flag.Bool("open", runtime.GOOS == "windows", "Open default browser on start")
+	resetPasswordFlag := flag.Bool("reset-password", false, "Set a new random admin password (written to <db>.admin-password) and exit")
 	disable2FAFlag := flag.Bool("disable-2fa", false, "Emergency bypass flag to disable 2FA")
 	logLevelFlag := flag.String("log-level", "", "Console log level (debug, info, warn, error, off; default: error) [env: PANTAU_LOG_LEVEL]")
 	quietFlag := flag.Bool("quiet", false, "Suppress non-error console logs (shorthand for -log-level=error)")
@@ -202,6 +202,22 @@ func main() {
 	sshrunner.AllowLegacyAlgorithms = *legacySSHFlag
 
 	ver := resolveVersion()
+	if *resetPasswordFlag {
+		_, dbPath, _ := resolveConfig(*portFlag, *dbFlag)
+		db, err := store.Open(dbPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to open database: %v\n", err)
+			os.Exit(1)
+		}
+		defer db.Close()
+		pw, err := db.ResetAdminPassword(dbPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Password reset failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("🔑 New admin password: %s\n   Also saved to %s (owner-only). Change it after login, then delete that file.\n", pw, store.InitialPasswordFile(dbPath))
+		return
+	}
 	if *versionFlag {
 		printBanner(ver)
 		os.Exit(0)

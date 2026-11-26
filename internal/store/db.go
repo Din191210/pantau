@@ -441,6 +441,27 @@ func (d *DB) alterAddColumn(table, column, colType string) error {
 	return err
 }
 
+// ResetAdminPassword stores a new random admin password and writes it to the
+// owner-only InitialPasswordFile. Used on fresh install and by -reset-password.
+func (d *DB) ResetAdminPassword(dbPath string) (string, error) {
+	b := make([]byte, 15)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	pw := base64.RawURLEncoding.EncodeToString(b)
+	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(InitialPasswordFile(dbPath), []byte(pw+"\n"), 0600); err != nil {
+		return "", fmt.Errorf("write admin password file: %w", err)
+	}
+	if err := d.SetSetting("admin_password_hash", string(hash)); err != nil {
+		return "", err
+	}
+	return pw, nil
+}
+
 // InitialPasswordFile is where a fresh install writes its generated admin password.
 func InitialPasswordFile(dbPath string) string { return dbPath + ".admin-password" }
 
@@ -451,22 +472,15 @@ func (d *DB) initDefaults(dbPath string) error {
 	var hash string
 	err := d.QueryRow("SELECT value FROM settings WHERE key = 'admin_password_hash'").Scan(&hash)
 	if err == sql.ErrNoRows {
-		initial := "admin"
-		if !strings.HasPrefix(dbPath, ":memory:") && !strings.HasPrefix(dbPath, "file:") {
-			b := make([]byte, 15)
-			if _, err := rand.Read(b); err != nil {
+		if strings.HasPrefix(dbPath, ":memory:") || strings.HasPrefix(dbPath, "file:") {
+			defaultHash, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+			if err != nil {
 				return err
 			}
-			initial = base64.RawURLEncoding.EncodeToString(b)
-			if err := os.WriteFile(InitialPasswordFile(dbPath), []byte(initial+"\n"), 0600); err != nil {
-				return fmt.Errorf("write initial admin password: %w", err)
+			if err := d.SetSetting("admin_password_hash", string(defaultHash)); err != nil {
+				return err
 			}
-		}
-		defaultHash, err := bcrypt.GenerateFromPassword([]byte(initial), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-		if _, err := d.Exec("INSERT INTO settings(key, value) VALUES ('admin_password_hash', ?)", string(defaultHash)); err != nil {
+		} else if _, err := d.ResetAdminPassword(dbPath); err != nil {
 			return err
 		}
 	}
