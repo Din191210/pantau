@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -569,6 +570,30 @@ func (d *DB) alterAddColumn(table, column, colType string) error {
 	_, err := d.Exec(fmt.Sprintf(`ALTER TABLE %s ADD COLUMN %s %s`, table, column, colType))
 	return err
 }
+
+// ResetAdminPassword stores a new random admin password and writes it to the
+// owner-only InitialPasswordFile. Used on fresh install and by -reset-password.
+func (d *DB) ResetAdminPassword(dbPath string) (string, error) {
+	b := make([]byte, 15)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	pw := base64.RawURLEncoding.EncodeToString(b)
+	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(InitialPasswordFile(dbPath), []byte(pw+"\n"), 0600); err != nil {
+		return "", fmt.Errorf("write admin password file: %w", err)
+	}
+	if err := d.SetSetting("admin_password_hash", string(hash)); err != nil {
+		return "", err
+	}
+	return pw, nil
+}
+
+// InitialPasswordFile is where a fresh install writes its generated admin password.
+func InitialPasswordFile(dbPath string) string { return dbPath + ".admin-password" }
 
 func (d *DB) initDefaults() error {
 	// 1. Ensure default admin password exists (default: "admin")
