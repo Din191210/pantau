@@ -304,6 +304,9 @@ func (s *Server) routes() {
 	// Security center: local feeders post with a bearer token; the dashboard reads with a session.
 	s.mux.HandleFunc("/api/security/ingest", s.handleSecurityIngest)
 	s.mux.HandleFunc("/api/security/", s.authMiddleware(s.handleSecurityRoute))
+
+	// Operations Dashboard overview
+	s.mux.HandleFunc("/api/dashboard/overview", s.authMiddleware(s.handleDashboardOverview))
 }
 
 func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -2317,7 +2320,7 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/" && r.URL.Path != "/dashboard" {
 		http.NotFound(w, r)
 		return
 	}

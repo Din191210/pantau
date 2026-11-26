@@ -81,10 +81,9 @@ func (n *desktopNotifier) notify(e *store.SecurityEvent) {
 	if over {
 		return
 	}
+	// Always "normal": GNOME pins "critical" banners at the top of the screen until
+	// dismissed. Normal ones slide into the message tray, where the action still works.
 	urgency := "normal"
-	if e.Severity == "critical" {
-		urgency = "critical"
-	}
 	title := fmt.Sprintf("Pantau: %s (%s)", strings.ToUpper(e.Severity), e.Source)
 	// GNOME renders the body as markup; titles come from alert payloads, so escape it.
 	esc := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
@@ -102,7 +101,7 @@ func (n *desktopNotifier) notify(e *store.SecurityEvent) {
 		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Hour)
 		defer cancel()
 		out, err := exec.CommandContext(ctx, "notify-send", "-u", urgency, "-a", "Pantau", "-i", "security-high",
-			"-A", "default=Lihat detail", "-A", "open=Lihat detail", "--", title, body).Output()
+			"-c", "security", "-A", "default=Lihat detail", "-A", "open=Lihat detail", "--", title, body).Output()
 		if err != nil {
 			if ctx.Err() == nil {
 				logger.Warn("security", "", "Desktop notification failed: "+err.Error())
@@ -110,7 +109,9 @@ func (n *desktopNotifier) notify(e *store.SecurityEvent) {
 			return
 		}
 		if act := strings.TrimSpace(string(out)); act == "default" || act == "open" {
-			if err := exec.Command("xdg-open", detailURL).Start(); err != nil {
+			// The service lacks WAYLAND_DISPLAY/DISPLAY, so a direct xdg-open cannot reach
+			// the browser. A transient user unit inherits the session's graphical env.
+			if err := exec.Command("systemd-run", "--user", "--quiet", "--collect", "xdg-open", detailURL).Run(); err != nil {
 				logger.Warn("security", "", "Opening dashboard failed: "+err.Error())
 			}
 		}

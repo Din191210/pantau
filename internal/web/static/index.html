@@ -1151,12 +1151,339 @@ body.has-workspace-shelf .container {
 .sec-popup-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
 @media (prefers-reduced-motion: no-preference) { .sec-popup { animation: secIn 0.18s ease-out; } }
 @keyframes secIn { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Operations Dashboard & Navigation Shell */
+html { scroll-padding-top: 76px; scroll-padding-bottom: 52px; }
+button:not(:disabled), a[href], select:not(:disabled), summary, [role="tab"]:not([aria-disabled="true"]) { cursor: pointer; }
+button:disabled, select:disabled { cursor: not-allowed; opacity: 0.55; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [role="tab"]:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.logo-btn { background: none; border: none; padding: 4px 2px; border-radius: 6px; flex-shrink: 0; }
+.header-actions { display: flex; gap: 8px; align-items: center; min-width: 0; }
+
+.app-view-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-border);
+}
+.app-view-tabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.app-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid #475569;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.app-view-tab:hover { background: #273549; color: #f8fafc; border-color: #64748b; }
+.app-view-tab.active {
+  background: #0b1120;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+.nav-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #0f172a;
+  border: 1px solid #64748b;
+  color: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.app-view-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dash-updated-meta { font-size: 0.8rem; color: #94a3b8; font-variant-numeric: tabular-nums; }
+
+.dash-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.dash-title { font-size: clamp(1.35rem, 2.2vw, 1.75rem); font-weight: 700; color: #f8fafc; line-height: 1.2; margin: 0 0 4px 0; }
+.dash-subtitle { font-size: 0.9rem; color: #94a3b8; margin: 0; line-height: 1.45; }
+.dash-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.dash-state-box {
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+}
+.dash-state-box.is-error { border-color: #ef4444; background: #261620; color: #fca5a5; }
+
+.dash-posture-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.dash-posture-card {
+  background: #1e293b;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.dash-posture-card.tone-critical { border-left: 4px solid #ef4444; }
+.dash-posture-card.tone-warn { border-left: 4px solid #f59e0b; }
+.dash-posture-card.tone-ok { border-left: 4px solid #10b981; }
+.dash-posture-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dash-posture-label { font-size: 0.82rem; font-weight: 600; color: #cbd5e1; }
+.dash-posture-metric { font-size: 1.65rem; font-weight: 700; color: #f8fafc; line-height: 1.15; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.dash-posture-detail { font-size: 0.82rem; color: #94a3b8; line-height: 1.45; }
+.dash-posture-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid rgba(51, 65, 85, 0.7); }
+
+.dash-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+.dash-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.dash-panel {
+  background: #1e293b;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.dash-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dash-panel-head > div:first-child { flex: 1 1 200px; min-width: 0; }
+.dash-panel-title { font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin: 0; display: inline-flex; align-items: center; gap: 8px; }
+.dash-panel-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+
+.dash-sev-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.dash-sev-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #0b1120;
+  border: 1px solid var(--card-border);
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  font-variant-numeric: tabular-nums;
+}
+.dash-sev-chip strong { color: #f8fafc; }
+
+.dash-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--card-border); border-radius: 8px; background: #0b1120; }
+.dash-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.dash-table th { background: #0f172a; color: #cbd5e1; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--card-border); text-align: left; white-space: nowrap; }
+.dash-table td { padding: 9px 12px; border-bottom: 1px solid rgba(51, 65, 85, 0.55); color: #f8fafc; vertical-align: middle; }
+.dash-table tr:last-child td { border-bottom: none; }
+.dash-table td.num, .dash-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.dash-source-link {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font: inherit;
+  font-weight: 600;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.dash-source-link:hover { color: #7dd3fc; }
+
+.dash-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--card-border); padding-bottom: 8px; flex-wrap: wrap; }
+.dash-tab {
+  background: #0b1120;
+  border: 1px solid #475569;
+  color: #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-height: 34px;
+}
+.dash-tab:hover { color: #f8fafc; border-color: #64748b; }
+.dash-tab.active { background: #0f172a; color: #38bdf8; border-color: #38bdf8; }
+
+.dash-event-list { display: flex; flex-direction: column; gap: 8px; }
+.dash-event-row {
+  background: #0b1120;
+  border: 1px solid var(--card-border);
+  border-left: 4px solid #64748b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.dash-event-row.sev-critical { border-left-color: #ef4444; }
+.dash-event-row.sev-high { border-left-color: #f97316; }
+.dash-event-row.sev-medium { border-left-color: #f59e0b; }
+.dash-event-row-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dash-event-title { font-size: 0.85rem; font-weight: 600; color: #f8fafc; overflow-wrap: anywhere; flex: 1 1 220px; }
+.dash-event-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.76rem; color: #94a3b8; overflow-wrap: anywhere; }
+.dash-event-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dash-watchlist-actions { flex-wrap: nowrap; }
+.dash-watchlist-table th, .dash-watchlist-table td { padding: 8px 8px; }
+.dash-sev-tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: #1e293b; border: 1px solid #475569; }
+.dash-sev-tag.critical { color: #fca5a5; border-color: rgba(239, 68, 68, 0.5); }
+.dash-sev-tag.high { color: #fdba74; border-color: rgba(249, 115, 22, 0.5); }
+.dash-sev-tag.medium { color: #fcd34d; border-color: rgba(245, 158, 11, 0.5); }
+.dash-sev-tag.low { color: #cbd5e1; }
+
+.dash-panel-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid rgba(51, 65, 85, 0.65); }
+
+.dash-resource-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.dash-metric-box { background: #0b1120; border: 1px solid var(--card-border); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.dash-metric-k { font-size: 0.76rem; color: #94a3b8; margin-bottom: 4px; }
+.dash-metric-v { font-size: 0.96rem; font-weight: 700; color: #f8fafc; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dash-metric-sub { font-size: 0.75rem; color: #cbd5e1; margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+.dash-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.dash-kv-list { display: flex; flex-direction: column; gap: 8px; }
+.dash-kv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #0b1120;
+  border: 1px solid var(--card-border);
+  border-radius: 7px;
+  font-size: 0.8rem;
+}
+.dash-kv-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dash-kv-name { color: #f8fafc; font-weight: 600; }
+.dash-kv-status { font-size: 0.76rem; color: #94a3b8; overflow-wrap: anywhere; }
+
+.dash-tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dash-tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 10px 12px;
+  background: #0b1120;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #f8fafc;
+  text-align: left;
+  min-height: 58px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.dash-tool-btn:hover:not(:disabled) { border-color: #38bdf8; background: #131c31; }
+.dash-tool-name { font-size: 0.82rem; font-weight: 600; color: #f8fafc; }
+.dash-tool-meta { font-size: 0.74rem; color: #94a3b8; font-variant-numeric: tabular-nums; }
+
+.dash-notes-preview {
+  background: #0b1120;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 130px;
+  overflow-y: auto;
+}
+.dash-empty {
+  background: #0b1120;
+  border: 1px dashed #475569;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.dash-empty-title { font-size: 0.88rem; font-weight: 600; color: #f8fafc; }
+.dash-empty-desc { font-size: 0.8rem; color: #94a3b8; line-height: 1.45; }
+.btn-outline { background: #0b1120; border: 1px solid #64748b; color: #f8fafc; }
+.btn-outline:hover:not(:disabled) { border-color: #38bdf8; color: #38bdf8; opacity: 1; }
+.status-text-ok { color: #34d399; font-weight: 600; }
+.status-text-warn { color: #fcd34d; font-weight: 600; }
+.status-text-high { color: #fdba74; font-weight: 600; }
+.status-text-crit { color: #fca5a5; font-weight: 600; }
+
+@media (max-width: 1080px) {
+  .dash-posture-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-posture-grid > :first-child { grid-column: 1 / -1; }
+  .dash-workspace { grid-template-columns: minmax(0, 1fr); }
+  .dash-bottom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-bottom-grid > :last-child { grid-column: 1 / -1; }
+  .dash-bottom-grid > :last-child .dash-tool-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  header { gap: 10px; }
+  footer { gap: 8px; }
+  footer .footer-zone:last-child > :not(#footerActivityBtn) { display: none; }
+  .header-actions { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding: 2px 0; }
+  .header-actions::-webkit-scrollbar { display: none; }
+  .app-view-tab, .app-view-tabs .btn, .dash-tab, .dash-panel .btn, .dash-posture-foot .btn, .dash-empty .btn, .dash-header-actions .btn, .dash-tool-btn, .dash-kv-row .btn, .dash-source-link { min-height: 44px; }
+  .dash-source-link { display: inline-flex; align-items: center; min-width: 44px; padding: 6px 4px; }
+  .dash-posture-grid, .dash-resource-grid, .dash-bottom-grid, .dash-tool-grid, .dash-bottom-grid > :last-child .dash-tool-grid { grid-template-columns: minmax(0, 1fr); }
+  .dash-posture-grid > :first-child, .dash-bottom-grid > :last-child { grid-column: auto; }
+  .dash-panel, .dash-posture-card { padding: 14px; }
+  .dash-table th, .dash-table td { padding: 7px 8px; font-size: 0.78rem; }
+  .dash-col-hide-mobile { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-dot.online, .terminal-tab-activity-dot { animation: none; }
+}
 </style>
 </head>
 <body>
 
 <div id="loginView" style="display: none; height: 100vh; align-items: center; justify-content: center;">
-  <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 32px; border-radius: 12px; width: 340px; display: flex; flex-direction: column; gap: 16px;">
+  <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 32px; border-radius: 12px; width: 340px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; gap: 16px;">
     <div style="display: flex; justify-content: flex-end;">
       <button class="btn btn-sm" onclick="toggleLanguage()" id="loginLangBtn" title="Switch Language">🌐 EN</button>
     </div>
@@ -1237,8 +1564,8 @@ body.has-workspace-shelf .container {
 
 <div id="appView" style="display: none; flex-direction: column; flex: 1;">
   <header>
-    <div class="logo">
-      <svg width="26" height="26" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Pantau Logo" style="flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45));">
+    <button type="button" class="logo logo-btn" onclick="setAppView('dashboard')" title="Pantau Dashboard">
+      <svg width="26" height="26" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.45));">
         <defs>
           <linearGradient id="hdrShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#0284c7" />
@@ -1281,8 +1608,8 @@ body.has-workspace-shelf .container {
         <circle cx="132" cy="142" r="7.5" fill="#00ff88" opacity="0.45" />
       </svg>
       <span>PANTAU</span>
-    </div>
-    <div style="display: flex; gap: 8px; align-items: center;">
+    </button>
+    <div class="header-actions">
       <div class="header-cluster">
         <button class="btn btn-icon" id="btnHeaderNetDiag" onclick="openNetDiagModal()" title="Network Diagnostics" data-i18n-title="netdiag_title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></button>
         <button class="btn btn-icon" onclick="openTransfersModal()" title="Cross-Host Transfers" data-i18n-title="transfers_title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 6h18"/><path d="m7 22-4-4 4-4"/><path d="M21 18H3"/></svg><span id="activeTransferBadge" class="badge badge-healthy" style="display: none; margin-left: 2px;">0</span></button>
@@ -1321,46 +1648,94 @@ body.has-workspace-shelf .container {
     </div>
   </div>
 
-  <div class="container">
-    <div id="alertBannerArea"></div>
-    <!-- Dashboard Toolbar (Search, Filter, Sort, View Mode) -->
-    <div class="dashboard-toolbar">
-      <div class="search-box">
-        <span style="color: var(--text-muted); font-size: 0.9rem;">🔍</span>
-        <input type="text" id="hostSearchInput" placeholder="Search hosts by name, IP, OS, notes..." data-i18n-placeholder="search_hosts_ph" oninput="onSearchFilterChange()" />
-        <button id="clearSearchBtn" class="btn btn-sm" style="display: none; padding: 2px 6px; background: transparent; color: var(--text-muted);" onclick="clearSearch()">✕</button>
+  <main id="mainContent" class="container">
+    <nav class="app-view-nav" aria-label="Primary navigation">
+      <div class="app-view-tabs">
+        <button type="button" id="navDashboardBtn" class="app-view-tab active" aria-current="page" onclick="setAppView('dashboard')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span data-i18n="nav_dashboard">Dashboard</span>
+        </button>
+        <button type="button" id="navHostsBtn" class="app-view-tab" onclick="setAppView('hosts')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/></svg>
+          <span data-i18n="nav_hosts">Hosts</span>
+          <span id="navHostsCount" class="nav-count-badge">0</span>
+        </button>
+        <button type="button" id="btnDashRefresh" class="btn btn-sm btn-outline" onclick="loadDashboardOverview(true)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right: 5px;"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+          <span data-i18n="dash_refresh_btn">Refresh</span>
+        </button>
+        <span id="dashUpdatedLabel" class="dash-updated-meta"></span>
       </div>
-      <div class="toolbar-controls">
-        <span id="inspectionPausedBadge" style="display: none; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; font-size: 0.78rem; font-weight: 500; cursor: pointer;" onclick="openSettingsModal('general')" title="Background Inspection is paused. Click to open Settings.">
-          ⏸️ <span data-i18n="inspection_paused_badge">Background Inspection Paused</span>
-        </span>
-        <select id="groupFilterSelect" onchange="onSearchFilterChange()" style="width: auto;">
-          <option value="all" data-i18n="filter_all_groups">All Groups</option>
-        </select>
-        <select id="statusFilterSelect" onchange="onSearchFilterChange()" style="width: auto;">
-          <option value="all" data-i18n="filter_all">All Status</option>
-          <option value="healthy" data-i18n="filter_healthy">Healthy</option>
-          <option value="degraded" data-i18n="filter_degraded">Degraded</option>
-          <option value="down" data-i18n="filter_down">Down</option>
-        </select>
-        <select id="sortSelect" onchange="onSearchFilterChange()" style="width: auto;">
-          <option value="manual" data-i18n="sort_manual">Order: Manual</option>
-          <option value="name_asc" data-i18n="sort_name_asc">Name: A → Z</option>
-          <option value="name_desc" data-i18n="sort_name_desc">Name: Z → A</option>
-          <option value="score_desc" data-i18n="sort_score_desc">Score: Highest</option>
-          <option value="score_asc" data-i18n="sort_score_asc">Score: Lowest</option>
-          <option value="status" data-i18n="sort_status">Status</option>
-        </select>
-        <div class="view-mode-toggle">
-          <button class="btn btn-sm view-btn active" id="viewGridBtn" onclick="setViewMode('grid')" title="Grid View">🔲</button>
-          <button class="btn btn-sm view-btn" id="viewListBtn" onclick="setViewMode('list')" title="List View">☰</button>
+    </nav>
+
+    <div id="alertBannerArea"></div>
+
+    <section id="dashboardView" aria-labelledby="dashHeading">
+      <div class="dash-header">
+        <div>
+          <h1 id="dashHeading" class="dash-title" data-i18n="dash_heading">Operations Dashboard</h1>
+          <p id="dashSubtitle" class="dash-subtitle" data-i18n="dash_subtitle_loading">Loading fleet status, security events, and inspection readiness...</p>
+        </div>
+        <div class="dash-header-actions">
+          <button type="button" id="dashInspectAllBtn" class="btn btn-outline" onclick="inspectAllHosts()" style="display: none;">
+            <span data-i18n="dash_inspect_all_btn">Inspect All Hosts</span>
+          </button>
+          <button type="button" class="btn btn-primary" onclick="openAddHostModal()" data-i18n="add_host">+ Add Host</button>
         </div>
       </div>
-    </div>
 
-    <div id="hostGrid" class="grid"></div>
-    <div id="hostList" class="host-list-view" style="display: none;"></div>
-  </div>
+      <div id="dashStateRegion" aria-live="polite"></div>
+      <div id="dashPostureGrid" class="dash-posture-grid"></div>
+
+      <div id="dashWorkspace" class="dash-workspace">
+        <div class="dash-col" id="dashWorkspaceLeft"></div>
+        <div class="dash-col" id="dashWorkspaceRight"></div>
+      </div>
+
+      <div id="dashBottomGrid" class="dash-bottom-grid"></div>
+    </section>
+
+    <section id="hostsView" aria-labelledby="hostsHeading" hidden style="display: none;">
+      <h1 id="hostsHeading" class="sr-only" data-i18n="nav_hosts">Hosts</h1>
+      <!-- Dashboard Toolbar (Search, Filter, Sort, View Mode) -->
+      <div class="dashboard-toolbar">
+        <div class="search-box">
+          <span style="color: var(--text-muted); font-size: 0.9rem;">🔍</span>
+          <input type="text" id="hostSearchInput" placeholder="Search hosts by name, IP, OS, notes..." data-i18n-placeholder="search_hosts_ph" oninput="onSearchFilterChange()" />
+          <button id="clearSearchBtn" class="btn btn-sm" style="display: none; padding: 2px 6px; background: transparent; color: var(--text-muted);" onclick="clearSearch()">✕</button>
+        </div>
+        <div class="toolbar-controls">
+          <span id="inspectionPausedBadge" style="display: none; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; font-size: 0.78rem; font-weight: 500; cursor: pointer;" onclick="openSettingsModal('general')" title="Background Inspection is paused. Click to open Settings.">
+            ⏸️ <span data-i18n="inspection_paused_badge">Background Inspection Paused</span>
+          </span>
+          <select id="groupFilterSelect" onchange="onSearchFilterChange()" style="width: auto;">
+            <option value="all" data-i18n="filter_all_groups">All Groups</option>
+          </select>
+          <select id="statusFilterSelect" onchange="onSearchFilterChange()" style="width: auto;">
+            <option value="all" data-i18n="filter_all">All Status</option>
+            <option value="healthy" data-i18n="filter_healthy">Healthy</option>
+            <option value="degraded" data-i18n="filter_degraded">Degraded</option>
+            <option value="down" data-i18n="filter_down">Down</option>
+          </select>
+          <select id="sortSelect" onchange="onSearchFilterChange()" style="width: auto;">
+            <option value="manual" data-i18n="sort_manual">Order: Manual</option>
+            <option value="name_asc" data-i18n="sort_name_asc">Name: A → Z</option>
+            <option value="name_desc" data-i18n="sort_name_desc">Name: Z → A</option>
+            <option value="score_desc" data-i18n="sort_score_desc">Score: Highest</option>
+            <option value="score_asc" data-i18n="sort_score_asc">Score: Lowest</option>
+            <option value="status" data-i18n="sort_status">Status</option>
+          </select>
+          <div class="view-mode-toggle">
+            <button class="btn btn-sm view-btn active" id="viewGridBtn" onclick="setViewMode('grid')" title="Grid View">🔲</button>
+            <button class="btn btn-sm view-btn" id="viewListBtn" onclick="setViewMode('list')" title="List View">☰</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="hostGrid" class="grid"></div>
+      <div id="hostList" class="host-list-view" style="display: none;"></div>
+    </section>
+  </main>
 
   <!-- Activity Console Drawer -->
   <div id="activityConsoleDrawer" class="activity-console-drawer" style="display: none;">
@@ -3080,7 +3455,101 @@ const I18N = {
     "auth_fails": "Failed Auth Attempts",
     "egress_connectivity": "Internet Egress Status",
     "system_status_label": "System Desired State",
-    "inspection_freshness": "Inspection Freshness"
+    "inspection_freshness": "Inspection Freshness",
+    "nav_dashboard": "Dashboard",
+    "nav_hosts": "Hosts",
+    "dash_heading": "Operations Dashboard",
+    "dash_subtitle_loading": "Loading fleet status, security events, and inspection readiness...",
+    "dash_subtitle_live": "Agentless SSH fleet, desired state drift, and unified security triage in one view.",
+    "dash_refresh_btn": "Refresh",
+    "dash_inspect_all_btn": "Inspect All Hosts",
+    "dash_updated_at": "Updated",
+    "dash_loading_msg": "Loading dashboard overview from SQLite...",
+    "dash_error_msg": "Failed to load dashboard overview.",
+    "dash_retry_btn": "Retry",
+    "dash_card_attention": "Immediate Attention",
+    "dash_card_attention_ok": "No urgent security alerts, drift alerts, or down hosts.",
+    "dash_card_attention_detail": "{urgent} urgent security ({crit} critical, {high} high) | {alerts} drift alerts | {down} hosts down/degraded",
+    "dash_open_security": "Review Security",
+    "dash_view_drift": "View Drift",
+    "dash_card_fleet": "Fleet & Desired State",
+    "dash_fleet_empty_val": "0 hosts",
+    "dash_fleet_detail": "{healthy} healthy, {degraded} degraded, {down} down | {rules} active rules ({drift} drifting)",
+    "dash_manage_hosts": "Open Hosts View",
+    "dash_card_sec24": "Security Activity (24h)",
+    "dash_sec24_detail": "{events} events updated in 24h | {open} open ({acked} handled) across {sources} sources",
+    "dash_sec_panel_title": "Security Triage (CVE-Sentinel, Wazuh, Suricata)",
+    "dash_sec_panel_sub": "Open findings grouped by ingest source and repetition frequency.",
+    "dash_sec_col_source": "Source",
+    "dash_sec_col_open": "Open",
+    "dash_sec_col_urgent": "Crit / High",
+    "dash_sec_col_hits": "Total Hits",
+    "dash_sec_col_last": "Last Seen",
+    "dash_sec_tab_urgent": "Action Required",
+    "dash_sec_tab_recurring": "Top Recurring / Idle Noise",
+    "dash_sec_open_full": "Open Security Center",
+    "dash_sec_empty_title": "No Open Security Findings",
+    "dash_sec_empty_desc": "CVE-Sentinel and Wazuh/Suricata events will appear here when ingested via /api/security/ingest.",
+    "dash_drift_panel_title": "Active Drift Alerts & Recent Incidents",
+    "dash_drift_panel_sub": "Desired State deviations detected during SSH inspections.",
+    "dash_drift_empty_title": "No Active Drift Alerts or Incidents",
+    "dash_drift_empty_desc": "Add a host and define Desired State rules to track services, containers, disk limits, and backups.",
+    "dash_capacity_panel_title": "Fleet Capacity & Telemetry",
+    "dash_capacity_panel_sub": "Aggregated compute, storage, I/O throughput, and network exposure across registered hosts.",
+    "dash_capacity_empty_title": "No SSH Hosts Registered Yet",
+    "dash_capacity_empty_desc": "Add a Linux server (including local server1@127.0.0.1 for host and rootless Podman containers) to collect CPU, RAM, Disk I/O, lifecycle score, and drift telemetry.",
+    "dash_watchlist_title": "Host Watchlist",
+    "dash_watchlist_sub": "Sorted by severity, lifecycle score, and resource pressure.",
+    "dash_watchlist_empty": "Register at least one host to monitor per-server metrics and launch terminals.",
+    "dash_view_all_hosts": "View All Hosts",
+    "dash_runs_title": "Recent Inspection Runs",
+    "dash_runs_sub": "Latest agentless SSH inspection sweeps recorded in SQLite.",
+    "dash_runs_empty_title": "No Inspection Runs Recorded",
+    "dash_runs_empty_desc": "Runs are recorded automatically on each manual or background SSH inspection cycle.",
+    "dash_readiness_title": "Hardening & Notification Readiness",
+    "dash_readiness_sub": "Authentication, alert dispatchers, and backup state.",
+    "dash_tools_title": "Operations Hub & Global Notes",
+    "dash_tools_sub": "Direct access to Pantau tools and shared operator notes.",
+    "dash_stat_cpu": "CPU Cores & Avg Load",
+    "dash_stat_ram": "Fleet RAM Usage",
+    "dash_stat_disk": "Root Disk Usage",
+    "dash_stat_io": "Disk I/O & Network",
+    "dash_stat_lifecycle": "Avg Lifecycle Score",
+    "dash_stat_exposure": "Network Exposure & Auth",
+    "dash_col_host": "Host",
+    "dash_col_status": "Status",
+    "dash_col_usage": "RAM / Disk",
+    "dash_col_score": "Lifecycle",
+    "dash_col_actions": "Actions",
+    "dash_open_runs": "Runs",
+    "dash_cfg_poll": "Background Inspection",
+    "dash_cfg_2fa": "Admin 2FA (TOTP)",
+    "dash_cfg_desktop": "Server Desktop Notify",
+    "dash_cfg_browser": "Browser Popups",
+    "dash_cfg_telegram": "Telegram Alerts",
+    "dash_cfg_webhook": "Webhook Alerts",
+    "dash_cfg_backup": "GitHub Encrypted Sync",
+    "dash_configure": "Configure",
+    "dash_enable": "Enable",
+    "dash_enabled": "Enabled",
+    "dash_disabled": "Disabled",
+    "dash_paused": "Paused (manual only)",
+    "dash_configured": "Configured",
+    "dash_not_configured": "Not configured",
+    "dash_blocked": "Blocked in browser",
+    "dash_tool_terminal": "Terminal Dock",
+    "dash_tool_transfers": "Cross-Host Transfers",
+    "dash_tool_bookmarks": "Global Bookmarks",
+    "dash_tool_netdiag": "Network Diagnostics",
+    "dash_tool_compare": "Host Comparison",
+    "dash_tool_activity": "Activity Console",
+    "dash_edit_notes": "Edit Notes",
+    "dash_notes_empty": "No global operator notes saved yet.",
+    "dash_hits_suffix": "hits",
+    "dash_need_2_hosts": "Needs 2+ hosts",
+    "dash_active_sessions": "active",
+    "dash_saved_presets": "presets",
+    "dash_pins_saved": "pinned paths"
   },
   id: {
     "brand_subtitle": "Manajemen Server Agentless",
@@ -3676,7 +4145,101 @@ const I18N = {
     "auth_fails": "Percobaan Login Gagal",
     "egress_connectivity": "Status Akses Internet",
     "system_status_label": "Kondisi Desired State",
-    "inspection_freshness": "Kebaruan Inspeksi"
+    "inspection_freshness": "Kebaruan Inspeksi",
+    "nav_dashboard": "Dasbor",
+    "nav_hosts": "Daftar Host",
+    "dash_heading": "Dasbor Operasional",
+    "dash_subtitle_loading": "Memuat status host, temuan keamanan, dan kesiapan inspeksi...",
+    "dash_subtitle_live": "Ringkasan armada SSH agentless, deviasi desired state, dan triase keamanan terpadu.",
+    "dash_refresh_btn": "Segarkan",
+    "dash_inspect_all_btn": "Inspeksi Semua Host",
+    "dash_updated_at": "Diperbarui",
+    "dash_loading_msg": "Memuat ringkasan dasbor dari SQLite...",
+    "dash_error_msg": "Gagal memuat data dasbor.",
+    "dash_retry_btn": "Coba Lagi",
+    "dash_card_attention": "Perlu Perhatian Segera",
+    "dash_card_attention_ok": "Tidak ada alert keamanan mendesak, drift aktif, atau host bermasalah.",
+    "dash_card_attention_detail": "{urgent} keamanan mendesak ({crit} critical, {high} high) | {alerts} alert drift | {down} host down/degraded",
+    "dash_open_security": "Tinjau Keamanan",
+    "dash_view_drift": "Lihat Drift",
+    "dash_card_fleet": "Armada & Desired State",
+    "dash_fleet_empty_val": "0 host",
+    "dash_fleet_detail": "{healthy} healthy, {degraded} degraded, {down} down | {rules} aturan aktif ({drift} drift)",
+    "dash_manage_hosts": "Buka Daftar Host",
+    "dash_card_sec24": "Aktivitas Keamanan (24 Jam)",
+    "dash_sec24_detail": "{events} event diperbarui 24j terakhir | {open} terbuka ({acked} ditangani) dari {sources} sumber",
+    "dash_sec_panel_title": "Triase Keamanan (CVE-Sentinel, Wazuh, Suricata)",
+    "dash_sec_panel_sub": "Temuan terbuka dikelompokkan menurut sumber ingest dan frekuensi berulang.",
+    "dash_sec_col_source": "Sumber",
+    "dash_sec_col_open": "Terbuka",
+    "dash_sec_col_urgent": "Kritis / Tinggi",
+    "dash_sec_col_hits": "Total Kejadian",
+    "dash_sec_col_last": "Terakhir",
+    "dash_sec_tab_urgent": "Perlu Tindakan",
+    "dash_sec_tab_recurring": "Sering Berulang / Noise Idle",
+    "dash_sec_open_full": "Buka Pusat Keamanan",
+    "dash_sec_empty_title": "Tidak Ada Temuan Keamanan Terbuka",
+    "dash_sec_empty_desc": "Temuan dari CVE-Sentinel dan Wazuh/Suricata akan muncul di sini saat masuk ke /api/security/ingest.",
+    "dash_drift_panel_title": "Alert Drift Aktif & Insiden Terbaru",
+    "dash_drift_panel_sub": "Deviasi Desired State yang terdeteksi saat inspeksi SSH.",
+    "dash_drift_empty_title": "Tidak Ada Alert Drift atau Insiden Aktif",
+    "dash_drift_empty_desc": "Tambahkan host dan buat aturan Desired State untuk memantau layanan, kontainer, disk, dan backup.",
+    "dash_capacity_panel_title": "Kapasitas & Telemetri Armada",
+    "dash_capacity_panel_sub": "Agregasi CPU, memori, laju Disk I/O, dan keterbukaan jaringan di seluruh host terdaftar.",
+    "dash_capacity_empty_title": "Belum Ada Host SSH Terdaftar",
+    "dash_capacity_empty_desc": "Tambahkan server Linux (termasuk server1@127.0.0.1 untuk host ini beserta kontainer Podman rootless) untuk memantau CPU, RAM, Disk I/O, skor siklus hidup, dan drift.",
+    "dash_watchlist_title": "Daftar Pantau Host",
+    "dash_watchlist_sub": "Diurutkan berdasarkan gangguan, skor siklus hidup, dan beban sumber daya.",
+    "dash_watchlist_empty": "Daftarkan minimal satu host untuk memantau metrik per server dan membuka terminal.",
+    "dash_view_all_hosts": "Lihat Semua Host",
+    "dash_runs_title": "Riwayat Inspeksi Terbaru",
+    "dash_runs_sub": "Eksekusi inspeksi SSH agentless terakhir yang tercatat di SQLite.",
+    "dash_runs_empty_title": "Belum Ada Riwayat Inspeksi",
+    "dash_runs_empty_desc": "Riwayat otomatis tercatat setiap siklus inspeksi manual maupun berkala.",
+    "dash_readiness_title": "Kesiapan Keamanan & Notifikasi",
+    "dash_readiness_sub": "Status autentikasi, saluran peringatan, dan cadangan.",
+    "dash_tools_title": "Pusat Operasi & Catatan Global",
+    "dash_tools_sub": "Akses cepat modul Pantau dan catatan operator bersama.",
+    "dash_stat_cpu": "Core CPU & Rata-rata Beban",
+    "dash_stat_ram": "Penggunaan RAM Armada",
+    "dash_stat_disk": "Penggunaan Disk Root",
+    "dash_stat_io": "Disk I/O & Jaringan",
+    "dash_stat_lifecycle": "Rata-rata Skor Siklus Hidup",
+    "dash_stat_exposure": "Port Publik & Login Gagal",
+    "dash_col_host": "Host",
+    "dash_col_status": "Status",
+    "dash_col_usage": "RAM / Disk",
+    "dash_col_score": "Siklus Hidup",
+    "dash_col_actions": "Aksi",
+    "dash_open_runs": "Riwayat",
+    "dash_cfg_poll": "Inspeksi Berkala",
+    "dash_cfg_2fa": "2FA Admin (TOTP)",
+    "dash_cfg_desktop": "Notifikasi Desktop Server",
+    "dash_cfg_browser": "Popup Browser",
+    "dash_cfg_telegram": "Notifikasi Telegram",
+    "dash_cfg_webhook": "Notifikasi Webhook",
+    "dash_cfg_backup": "Sinkronisasi GitHub Terenkripsi",
+    "dash_configure": "Atur",
+    "dash_enable": "Aktifkan",
+    "dash_enabled": "Aktif",
+    "dash_disabled": "Nonaktif",
+    "dash_paused": "Dijeda (manual saja)",
+    "dash_configured": "Terkonfigurasi",
+    "dash_not_configured": "Belum diatur",
+    "dash_blocked": "Diblokir browser",
+    "dash_tool_terminal": "Dock Terminal",
+    "dash_tool_transfers": "Transfer Antar-Host",
+    "dash_tool_bookmarks": "Penanda Berkas Global",
+    "dash_tool_netdiag": "Diagnostik Jaringan",
+    "dash_tool_compare": "Komparasi Host",
+    "dash_tool_activity": "Konsol Aktivitas",
+    "dash_edit_notes": "Ubah Catatan",
+    "dash_notes_empty": "Belum ada catatan operator global.",
+    "dash_hits_suffix": "kejadian",
+    "dash_need_2_hosts": "Butuh 2+ host",
+    "dash_active_sessions": "aktif",
+    "dash_saved_presets": "preset",
+    "dash_pins_saved": "path disematkan"
   }
 };
 
@@ -3724,7 +4287,9 @@ function setLanguage(lang) {
   if (document.getElementById('globalNotesModal') && document.getElementById('globalNotesModal').classList.contains('open')) {
     showGlobalNotesViewMode();
   }
-  loadHosts();
+  if (document.getElementById('appView')?.style.display !== 'none') {
+    loadHosts();
+  }
   if (document.getElementById('transfersListModal') && document.getElementById('transfersListModal').classList.contains('open')) {
     loadTransfers();
   }
@@ -3738,6 +4303,9 @@ function setLanguage(lang) {
       el.title = t('view_changelog', 'View Changelog');
     }
   });
+  if (typeof dashboardData !== 'undefined' && dashboardData) {
+    renderDashboard();
+  }
 }
 
 function toggleLanguage() {
@@ -3769,14 +4337,17 @@ async function checkAuth() {
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('appView').style.display = 'flex';
     initDashboardToolbar();
+    setAppView(resolveInitialAppView(), false);
     loadGlobalNotes();
     loadInspectionSettings();
+    loadDashboardOverview();
     loadHosts();
     loadAlerts();
     loadTransfers();
     setInterval(loadAlerts, 15000);
     setInterval(loadTransfers, 15000);
     setInterval(loadHosts, 30000);
+    setInterval(() => loadDashboardOverview(false), 30000);
     checkFreshStatus();
     checkInspectAllStatus();
     setTimeout(() => checkForUpdates(false), 2000);
@@ -4000,6 +4571,7 @@ async function saveGlobalNotesModal() {
       globalNotesData = notes;
       showGlobalNotesViewMode();
       showToast(t('global_note_saved', 'Global note saved successfully'), 'success');
+      if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     } else {
       showToast(t('failed_save_global_note', 'Failed to save global note'), 'error');
     }
@@ -4035,6 +4607,7 @@ async function saveHostNote() {
       }
       showToast(t('host_note_saved', 'Host note saved successfully'), 'success');
       loadHosts();
+      if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     } else {
       showToast(t('failed_save_host_note', 'Failed to save host note'), 'error');
     }
@@ -4337,6 +4910,7 @@ async function savePollInterval() {
       updateInspectionStatusUI();
       renderHosts();
       showToast(t('settings_saved', 'Settings saved successfully'), 'success');
+      if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     } else {
       showToast(t('save_failed', 'Failed to save settings'), 'error');
     }
@@ -4829,6 +5403,8 @@ async function loadHosts() {
       return;
     }
     allRawHosts = await res.json() || [];
+    const navCount = document.getElementById('navHostsCount');
+    if (navCount) navCount.textContent = String(allRawHosts.length);
     updateGroupSuggestions();
     setEngineStatus(true);
     updateFooterMetrics();
@@ -4943,12 +5519,14 @@ async function loadAlerts() {
 async function ackAlert(id) {
   await fetch('/api/alerts/' + id + '/ack', { method: 'POST' });
   loadAlerts();
+  if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
 }
 
 async function ackAllAlerts() {
   await fetch('/api/alerts/ack-all', { method: 'POST' });
   alertOverlayOpen = false;
   loadAlerts();
+  if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
 }
 
 function openHostDetailFromAlert(hostID) {
@@ -5052,6 +5630,7 @@ async function saveHost() {
     closeModal('hostModal');
     showToast(t('save_host_success', 'Host saved successfully'), 'success');
     loadHosts();
+    if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     if (id && currentDetailHostId === parseInt(id)) {
       openHostDetail(id);
     }
@@ -5195,6 +5774,7 @@ async function deleteHost(id) {
     showToast(t('delete_host_failed', 'Failed to delete host'), 'error');
   }
   loadHosts();
+  if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
 }
 
 async function testHostSSH(id) {
@@ -5227,6 +5807,7 @@ async function inspectHost(id, e) {
     if (data.ok) {
       showToast(t('inspect_success', 'Inspection completed for host'), 'success');
       loadHosts();
+      if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
       if (currentHost && currentHost.id === id) {
         openHostDetail(id);
       }
@@ -8995,6 +9576,11 @@ function updateTerminalSessionIndicators() {
       }
     }
   });
+  const dashTermMeta = document.getElementById('dashToolTerminalMeta');
+  if (dashTermMeta && typeof dashboardData !== 'undefined' && dashboardData) {
+    const presets = dashboardData.workspace?.presets_count || 0;
+    dashTermMeta.textContent = `${terminalTabs.length} ${t('dash_active_sessions', 'active')} · ${presets} ${t('dash_saved_presets', 'presets')}`;
+  }
 }
 
 function toggleTerminalDockMaximize() {
@@ -9775,6 +10361,7 @@ async function confirmEnable2FA() {
     if (res.ok && data.status === 'enabled') {
       showToast(t('2fa_enabled_success', 'Two-Factor Authentication successfully activated!'), 'success');
       load2FASettings();
+      if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     } else {
       if (errEl) errEl.innerText = t('invalid_2fa_code', 'Invalid confirmation code');
     }
@@ -9805,6 +10392,7 @@ async function disable2FA() {
       document.getElementById('disable2FACode').value = '';
       showToast(t('2fa_disabled_success', 'Two-Factor Authentication deactivated.'), 'success');
       load2FASettings();
+      if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     } else {
       if (errEl) errEl.innerText = data.error === 'invalid_password' ? t('invalid_password', 'Invalid password') : t('invalid_2fa_code', 'Invalid code');
     }
@@ -9854,6 +10442,7 @@ async function saveSettings() {
     body: JSON.stringify(payload)
   });
   showToast(t('settings_saved'), 'success');
+  if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
 }
 
 async function testNotification() {
@@ -9897,6 +10486,7 @@ async function saveGitHubBackupSettings() {
   });
   showToast(t('gh_config_saved'), 'success');
   openSettingsModal();
+  if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
 }
 
 async function syncGitHubNow() {
@@ -12457,6 +13047,7 @@ function updateSecurityNotifyButton() {
 async function enableSecurityNotifications() {
   if ('Notification' in window) await Notification.requestPermission();
   updateSecurityNotifyButton();
+  if (typeof dashboardData !== 'undefined' && dashboardData) renderDashboard();
 }
 
 async function loadSecuritySummary() {
@@ -12553,6 +13144,7 @@ async function ackSecurity(id) {
   document.querySelectorAll('.sec-popup').forEach(p => { if (id === 0 || p.dataset.id === String(id)) p.remove(); });
   if (document.getElementById('securityModal').classList.contains('open')) loadSecurityEvents();
   else loadSecuritySummary();
+  if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
 }
 
 function dismissSecurityPopup(el) {
@@ -12590,7 +13182,7 @@ function notifySecurityBrowser(e) {
   if (!('Notification' in window) || Notification.permission !== 'granted' || !document.hidden) return;
   try {
     const n = new Notification(`${t('sec_new_alert', 'Security alert')}: ${e.severity.toUpperCase()}`, {
-      body: e.title + (e.host ? '\n' + e.host : ''), tag: 'pantau-sec-' + e.id, requireInteraction: e.severity === 'critical'
+      body: e.title + (e.host ? '\n' + e.host : ''), tag: 'pantau-sec-' + e.id
     });
     n.onclick = () => { window.focus(); openSecurityModal(e.id); n.close(); };
   } catch (err) { /* some browsers only allow notifications from a service worker */ }
@@ -12613,6 +13205,7 @@ function connectSecurityStream() {
     try { msg = JSON.parse(m.data); } catch (err) { return; }
     loadSecuritySummary();
     if (document.getElementById('securityModal').classList.contains('open')) loadSecurityEvents();
+    if (typeof scheduleDashboardRefresh === 'function') scheduleDashboardRefresh();
     if (msg.type === 'event' && msg.popup && msg.event) {
       showSecurityPopup(msg.event);
       notifySecurityBrowser(msg.event);
@@ -12637,6 +13230,741 @@ async function initSecurityCenter() {
       title: `${urgent} ${t('sec_pending', 'critical/high findings not yet handled')}`, host: '' });
     const card = document.querySelector('.sec-popup[data-id="pending"]');
     if (card) card.querySelector('[data-act="ack"]').remove();
+  }
+}
+
+// ---- Operations Dashboard (Unified Overview) --------------------------------------
+let currentAppView = 'dashboard';
+let dashboardData = null;
+let dashboardLoading = false;
+let dashboardError = '';
+let dashSecTab = 'urgent';
+let dashRefreshTimer = null;
+
+function resolveInitialAppView() {
+  if (location.hash === '#hosts') return 'hosts';
+  return 'dashboard';
+}
+
+function setAppView(view, updateHash = true) {
+  const target = view === 'hosts' ? 'hosts' : 'dashboard';
+  currentAppView = target;
+  const dashSec = document.getElementById('dashboardView');
+  const hostsSec = document.getElementById('hostsView');
+  const navDash = document.getElementById('navDashboardBtn');
+  const navHosts = document.getElementById('navHostsBtn');
+
+  if (dashSec) {
+    dashSec.hidden = target !== 'dashboard';
+    dashSec.style.display = target === 'dashboard' ? 'block' : 'none';
+  }
+  if (hostsSec) {
+    hostsSec.hidden = target !== 'hosts';
+    hostsSec.style.display = target === 'hosts' ? 'block' : 'none';
+  }
+
+  if (navDash) {
+    navDash.classList.toggle('active', target === 'dashboard');
+    if (target === 'dashboard') navDash.setAttribute('aria-current', 'page');
+    else navDash.removeAttribute('aria-current');
+  }
+  if (navHosts) {
+    navHosts.classList.toggle('active', target === 'hosts');
+    if (target === 'hosts') navHosts.setAttribute('aria-current', 'page');
+    else navHosts.removeAttribute('aria-current');
+  }
+
+  if (updateHash && !location.hash.startsWith('#security')) {
+    const nextHash = target === 'hosts' ? '#hosts' : '#dashboard';
+    if (location.hash !== nextHash) {
+      history.replaceState(null, '', location.pathname + location.search + nextHash);
+    }
+  }
+  if (target === 'hosts') renderHosts();
+  else if (dashboardData) renderDashboard();
+}
+
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#hosts') setAppView('hosts', false);
+  else if (location.hash === '#dashboard') setAppView('dashboard', false);
+});
+
+function scheduleDashboardRefresh() {
+  if (dashRefreshTimer) clearTimeout(dashRefreshTimer);
+  dashRefreshTimer = setTimeout(() => {
+    dashRefreshTimer = null;
+    loadDashboardOverview(false);
+  }, 400);
+}
+
+function dashFmtTime(isoStr) {
+  if (!isoStr || String(isoStr).startsWith('0001-')) return '-';
+  return formatRelativeTime(isoStr).relative;
+}
+
+function dashFmtTimeTitle(isoStr) {
+  if (!isoStr || String(isoStr).startsWith('0001-')) return '-';
+  return formatRelativeTime(isoStr).title;
+}
+
+function ensureSecuritySourceOption(source) {
+  const sr = document.getElementById('secSourceFilter');
+  if (!sr || !source) return;
+  const exists = Array.from(sr.options).some(o => o.value === source);
+  if (!exists) {
+    const opt = document.createElement('option');
+    opt.value = source;
+    opt.textContent = source;
+    sr.appendChild(opt);
+  }
+}
+
+async function openSecurityModalFiltered(source) {
+  applySecurityTexts();
+  const st = document.getElementById('secStatusFilter');
+  const sr = document.getElementById('secSourceFilter');
+  if (st) st.value = 'open';
+  if (sr) {
+    ensureSecuritySourceOption(source);
+    sr.value = source || '';
+  }
+  await loadSecurityEvents();
+  openModal('securityModal');
+}
+
+async function openHostRunsFromDashboard(hostId) {
+  setHostActiveTab(hostId, 'runs');
+  await openHostDetail(hostId);
+  if (currentHost && currentHost.id === hostId) switchTab('runs');
+}
+
+function switchDashSecTab(tab) {
+  dashSecTab = tab === 'recurring' ? 'recurring' : 'urgent';
+  renderDashboard();
+}
+
+function handleDashTabKeydown(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const next = dashSecTab === 'urgent' ? 'recurring' : 'urgent';
+    switchDashSecTab(next);
+    const id = next === 'urgent' ? 'dashTabUrgent' : 'dashTabRecurring';
+    document.getElementById(id)?.focus();
+  }
+}
+
+async function loadDashboardOverview(manual = false) {
+  if (dashboardLoading && !manual) return;
+  dashboardLoading = true;
+  dashboardError = '';
+  const refreshBtn = document.getElementById('btnDashRefresh');
+  if (refreshBtn && manual) refreshBtn.disabled = true;
+  if (!dashboardData) renderDashboardState();
+
+  try {
+    const res = await fetch('/api/dashboard/overview');
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    }
+    dashboardData = await res.json();
+    dashboardError = '';
+    const navCount = document.getElementById('navHostsCount');
+    if (navCount && Array.isArray(dashboardData.hosts)) {
+      navCount.textContent = String(dashboardData.hosts.length);
+    }
+    const updEl = document.getElementById('dashUpdatedLabel');
+    if (updEl && dashboardData.generated_at) {
+      const dt = new Date(dashboardData.generated_at);
+      if (!isNaN(dt.getTime())) {
+        updEl.textContent = `${t('dash_updated_at', 'Updated')} ${dt.toLocaleTimeString(currentLang === 'id' ? 'id-ID' : undefined)}`;
+      }
+    }
+    renderDashboard();
+  } catch (err) {
+    dashboardError = err.message || 'Unknown error';
+    renderDashboardState();
+  } finally {
+    dashboardLoading = false;
+    if (refreshBtn) refreshBtn.disabled = false;
+  }
+}
+
+function renderDashboardState() {
+  const region = document.getElementById('dashStateRegion');
+  if (!region) return;
+  if (dashboardError) {
+    region.innerHTML = `
+      <div class="dash-state-box is-error" role="alert">
+        <span>${escapeHtml(t('dash_error_msg', 'Failed to load dashboard overview.'))} (${escapeHtml(dashboardError)})</span>
+        <button type="button" class="btn btn-sm btn-outline" onclick="loadDashboardOverview(true)">${escapeHtml(t('dash_retry_btn', 'Retry'))}</button>
+      </div>`;
+    return;
+  }
+  if (!dashboardData && dashboardLoading) {
+    region.innerHTML = `
+      <div class="dash-state-box">
+        <span>${escapeHtml(t('dash_loading_msg', 'Loading dashboard overview from SQLite...'))}</span>
+      </div>`;
+    return;
+  }
+  region.innerHTML = '';
+}
+
+function renderDashboard() {
+  renderDashboardState();
+  const data = dashboardData;
+  if (!data) return;
+
+  const hosts = Array.isArray(data.hosts) ? data.hosts : [];
+  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+  const sec = data.security || {};
+  const sev = sec.counts_by_severity || {};
+  const ds = data.desired_state || {};
+  const posture = data.posture || {};
+  const ws = data.workspace || {};
+  const runs = Array.isArray(data.recent_runs) ? data.recent_runs : [];
+  const incidents = Array.isArray(data.recent_incidents) ? data.recent_incidents : [];
+
+  const subtitleEl = document.getElementById('dashSubtitle');
+  if (subtitleEl) subtitleEl.textContent = t('dash_subtitle_live', 'Agentless SSH fleet, desired state drift, and unified security triage in one view.');
+  const inspectAllBtn = document.getElementById('dashInspectAllBtn');
+  if (inspectAllBtn) inspectAllBtn.style.display = hosts.length > 0 ? 'inline-flex' : 'none';
+
+  const navCount = document.getElementById('navHostsCount');
+  if (navCount) navCount.textContent = String(hosts.length);
+
+  // Band 1: Operational Posture Strip
+  const critCount = Number(sev.critical || 0);
+  const highCount = Number(sev.high || 0);
+  const medCount = Number(sev.medium || 0);
+  const lowCount = Number(sev.low || 0);
+  const urgentSec = critCount + highCount;
+
+  let healthyHosts = 0, degradedHosts = 0, downHosts = 0;
+  hosts.forEach(h => {
+    if (h.status === 'healthy') healthyHosts++;
+    else if (h.status === 'degraded') degradedHosts++;
+    else if (h.status === 'down') downHosts++;
+  });
+  const problemHosts = degradedHosts + downHosts;
+  const totalAttention = urgentSec + alerts.length + problemHosts;
+  const attnTone = (critCount > 0 || downHosts > 0 || alerts.length > 0) ? 'tone-critical' : (totalAttention > 0 ? 'tone-warn' : 'tone-ok');
+  const attnDetail = totalAttention === 0
+    ? t('dash_card_attention_ok', 'No urgent security alerts, drift alerts, or down hosts.')
+    : t('dash_card_attention_detail', '{urgent} urgent security ({crit} critical, {high} high) | {alerts} drift alerts | {down} hosts down/degraded')
+        .replace('{urgent}', String(urgentSec))
+        .replace('{crit}', String(critCount))
+        .replace('{high}', String(highCount))
+        .replace('{alerts}', String(alerts.length))
+        .replace('{down}', String(problemHosts));
+
+  const fleetTone = downHosts > 0 ? 'tone-critical' : ((degradedHosts > 0 || (ds.items_drift || 0) > 0) ? 'tone-warn' : (hosts.length > 0 ? 'tone-ok' : ''));
+  const fleetDetail = t('dash_fleet_detail', '{healthy} healthy, {degraded} degraded, {down} down | {rules} active rules ({drift} drifting)')
+    .replace('{healthy}', String(healthyHosts))
+    .replace('{degraded}', String(degradedHosts))
+    .replace('{down}', String(downHosts))
+    .replace('{rules}', String(ds.rules_enabled || 0))
+    .replace('{drift}', String(ds.items_drift || 0));
+
+  const bySource = Array.isArray(sec.by_source) ? sec.by_source : [];
+  bySource.forEach(s => ensureSecuritySourceOption(s.source));
+  const sec24Tone = (sec.last_24h_events || 0) > 0 && urgentSec > 0 ? 'tone-warn' : ((sec.open_total || 0) === 0 ? 'tone-ok' : '');
+  const sec24Detail = t('dash_sec24_detail', '{events} events updated in 24h | {open} open ({acked} handled) across {sources} sources')
+    .replace('{events}', String(sec.last_24h_events || 0))
+    .replace('{open}', String(sec.open_total || 0))
+    .replace('{acked}', String(sec.acked_total || 0))
+    .replace('{sources}', String(bySource.length));
+
+  const postureGrid = document.getElementById('dashPostureGrid');
+  if (postureGrid) {
+    postureGrid.innerHTML = `
+      <div class="dash-posture-card ${attnTone}">
+        <div>
+          <div class="dash-posture-top">
+            <span class="dash-posture-label">${escapeHtml(t('dash_card_attention', 'Immediate Attention'))}</span>
+          </div>
+          <div class="dash-posture-metric">${totalAttention}</div>
+          <div class="dash-posture-detail">${escapeHtml(attnDetail)}</div>
+        </div>
+        <div class="dash-posture-foot">
+          <button type="button" class="btn btn-sm btn-outline" onclick="openSecurityModal()">${escapeHtml(t('dash_open_security', 'Review Security'))}</button>
+          ${alerts.length > 0 ? `<button type="button" class="btn btn-sm btn-outline" onclick="toggleAlertOverlay(event)">${escapeHtml(t('dash_view_drift', 'View Drift'))}</button>` : ''}
+        </div>
+      </div>
+
+      <div class="dash-posture-card ${fleetTone}">
+        <div>
+          <div class="dash-posture-top">
+            <span class="dash-posture-label">${escapeHtml(t('dash_card_fleet', 'Fleet & Desired State'))}</span>
+          </div>
+          <div class="dash-posture-metric">${hosts.length} ${escapeHtml(t('nav_hosts', 'Hosts'))}</div>
+          <div class="dash-posture-detail">${escapeHtml(fleetDetail)}</div>
+        </div>
+        <div class="dash-posture-foot">
+          <button type="button" class="btn btn-sm btn-outline" onclick="setAppView('hosts')">${escapeHtml(t('dash_manage_hosts', 'Open Hosts View'))}</button>
+        </div>
+      </div>
+
+      <div class="dash-posture-card ${sec24Tone}">
+        <div>
+          <div class="dash-posture-top">
+            <span class="dash-posture-label">${escapeHtml(t('dash_card_sec24', 'Security Activity (24h)'))}</span>
+          </div>
+          <div class="dash-posture-metric">${Number(sec.last_24h_events || 0)}</div>
+          <div class="dash-posture-detail">${escapeHtml(sec24Detail)}</div>
+        </div>
+        <div class="dash-posture-foot">
+          <button type="button" class="btn btn-sm btn-outline" onclick="openSecurityModal()">${escapeHtml(t('dash_sec_open_full', 'Open Security Center'))}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Band 2 Left: Security Triage + Active Drift Alerts & Incidents
+  const sourceTableHtml = bySource.length > 0 ? `
+    <div class="dash-table-wrap">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>${escapeHtml(t('dash_sec_col_source', 'Source'))}</th>
+            <th class="num">${escapeHtml(t('dash_sec_col_open', 'Open'))}</th>
+            <th class="num">${escapeHtml(t('dash_sec_col_urgent', 'Crit / High'))}</th>
+            <th class="num">${escapeHtml(t('dash_sec_col_hits', 'Total Hits'))}</th>
+            <th class="dash-col-hide-mobile">${escapeHtml(t('dash_sec_col_last', 'Last Seen'))}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${bySource.map(s => `
+            <tr>
+              <td><button type="button" class="dash-source-link" onclick="openSecurityModalFiltered(${jsArg(s.source)})">${escapeHtml(s.source)}</button></td>
+              <td class="num">${Number(s.open_count || 0)}</td>
+              <td class="num">${Number(s.critical_count || 0)} / ${Number(s.high_count || 0)}</td>
+              <td class="num">${Number(s.total_hits || 0)}</td>
+              <td class="dash-col-hide-mobile" title="${escapeHtml(dashFmtTimeTitle(s.last_seen))}">${escapeHtml(dashFmtTime(s.last_seen))}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
+  const secList = dashSecTab === 'recurring'
+    ? (Array.isArray(sec.top_recurring) ? sec.top_recurring : [])
+    : (Array.isArray(sec.recent_urgent) ? sec.recent_urgent : []);
+
+  const secRowsHtml = secList.length > 0 ? `
+    <div class="dash-event-list" role="tabpanel" aria-labelledby="${dashSecTab === 'recurring' ? 'dashTabRecurring' : 'dashTabUrgent'}">
+      ${secList.map(ev => `
+        <div class="dash-event-row sev-${escapeHtml(ev.severity)}">
+          <div class="dash-event-row-head">
+            <span class="dash-sev-tag ${escapeHtml(ev.severity)}">${escapeHtml(ev.severity)}</span>
+            <span class="dash-event-title">${escapeHtml(ev.title)}</span>
+            <div class="dash-event-actions">
+              <button type="button" class="btn btn-sm btn-outline" onclick="openSecurityModal(${Number(ev.id)})">${escapeHtml(t('sec_view', 'View'))}</button>
+              <button type="button" class="btn btn-sm" onclick="ackSecurity(${Number(ev.id)})">${escapeHtml(t('sec_ack', 'Acknowledge'))}</button>
+            </div>
+          </div>
+          <div class="dash-event-meta">
+            <span>${escapeHtml(ev.source)} / ${escapeHtml(secCategoryLabel(ev.category))}</span>
+            ${ev.host ? `<span>${escapeHtml(ev.host)}</span>` : ''}
+            ${ev.ref ? `<span>${escapeHtml(ev.ref)}</span>` : ''}
+            <span>${Number(ev.count || 1)} ${escapeHtml(t('dash_hits_suffix', 'hits'))}</span>
+            <span title="${escapeHtml(dashFmtTimeTitle(ev.last_seen))}">${escapeHtml(dashFmtTime(ev.last_seen))}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  ` : `
+    <div class="dash-empty">
+      <div class="dash-empty-title">${escapeHtml(t('dash_sec_empty_title', 'No Open Security Findings'))}</div>
+      <div class="dash-empty-desc">${escapeHtml(t('dash_sec_empty_desc', 'CVE-Sentinel and Wazuh/Suricata events will appear here when ingested via /api/security/ingest.'))}</div>
+    </div>
+  `;
+
+  const driftRowsHtml = (alerts.length > 0 || incidents.length > 0) ? `
+    <div class="dash-event-list">
+      ${alerts.slice(0, 5).map(a => `
+        <div class="dash-event-row sev-critical">
+          <div class="dash-event-row-head">
+            <span class="dash-sev-tag critical">${escapeHtml(a.level || 'alert')}</span>
+            <span class="dash-event-title">${escapeHtml(a.host_name ? '[' + a.host_name + '] ' : '')}${escapeHtml(a.message)}</span>
+            <div class="dash-event-actions">
+              ${a.host_id ? `<button type="button" class="btn btn-sm btn-outline" onclick="openHostDetail(${Number(a.host_id)})">${escapeHtml(t('open_host', 'Open Host'))}</button>` : ''}
+              <button type="button" class="btn btn-sm" onclick="ackAlert(${Number(a.id)})">${escapeHtml(t('dismiss', 'Dismiss'))}</button>
+            </div>
+          </div>
+          <div class="dash-event-meta">
+            <span title="${escapeHtml(dashFmtTimeTitle(a.created_at))}">${escapeHtml(dashFmtTime(a.created_at))}</span>
+          </div>
+        </div>
+      `).join('')}
+      ${incidents.slice(0, 5).map(inc => `
+        <div class="dash-event-row ${inc.event_type === 'drift_resolved' ? '' : 'sev-high'}">
+          <div class="dash-event-row-head">
+            <span class="dash-sev-tag ${inc.event_type === 'drift_resolved' ? 'low' : 'high'}">${escapeHtml(inc.event_type)}</span>
+            <span class="dash-event-title">${escapeHtml(inc.host_name)}: ${escapeHtml(inc.summary)}</span>
+            ${inc.host_id ? `<button type="button" class="btn btn-sm btn-outline" onclick="openHostDetail(${Number(inc.host_id)})">${escapeHtml(t('open_host', 'Open Host'))}</button>` : ''}
+          </div>
+          <div class="dash-event-meta">
+            <span>${escapeHtml(inc.kind)}: ${escapeHtml(inc.target)}</span>
+            <span title="${escapeHtml(dashFmtTimeTitle(inc.created_at))}">${escapeHtml(dashFmtTime(inc.created_at))}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  ` : `
+    <div class="dash-empty">
+      <div class="dash-empty-title">${escapeHtml(t('dash_drift_empty_title', 'No Active Drift Alerts or Incidents'))}</div>
+      <div class="dash-empty-desc">${escapeHtml(t('dash_drift_empty_desc', 'Add a host and define Desired State rules to track services, containers, disk limits, and backups.'))}</div>
+      ${hosts.length === 0 ? `<button type="button" class="btn btn-sm btn-primary" onclick="openAddHostModal()">${escapeHtml(t('add_host', '+ Add Host'))}</button>` : ''}
+    </div>
+  `;
+
+  const leftCol = document.getElementById('dashWorkspaceLeft');
+  if (leftCol) {
+    leftCol.innerHTML = `
+      <section class="dash-panel" aria-labelledby="dashSecPanelTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashSecPanelTitle" class="dash-panel-title">${escapeHtml(t('dash_sec_panel_title', 'Security Triage (CVE-Sentinel, Wazuh, Suricata)'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_sec_panel_sub', 'Open findings grouped by ingest source and repetition frequency.'))}</div>
+          </div>
+          <div class="dash-sev-strip">
+            <span class="dash-sev-chip"><span class="status-text-crit">Critical</span> <strong>${critCount}</strong></span>
+            <span class="dash-sev-chip"><span class="status-text-high">High</span> <strong>${highCount}</strong></span>
+            <span class="dash-sev-chip"><span class="status-text-warn">Medium</span> <strong>${medCount}</strong></span>
+            <span class="dash-sev-chip">Low <strong>${lowCount}</strong></span>
+          </div>
+        </div>
+
+        ${sourceTableHtml}
+
+        <div class="dash-tabs" role="tablist" aria-label="Security triage views">
+          <button type="button" id="dashTabUrgent" role="tab" class="dash-tab ${dashSecTab === 'urgent' ? 'active' : ''}" aria-selected="${dashSecTab === 'urgent' ? 'true' : 'false'}" onclick="switchDashSecTab('urgent')" onkeydown="handleDashTabKeydown(event)">${escapeHtml(t('dash_sec_tab_urgent', 'Action Required'))}</button>
+          <button type="button" id="dashTabRecurring" role="tab" class="dash-tab ${dashSecTab === 'recurring' ? 'active' : ''}" aria-selected="${dashSecTab === 'recurring' ? 'true' : 'false'}" onclick="switchDashSecTab('recurring')" onkeydown="handleDashTabKeydown(event)">${escapeHtml(t('dash_sec_tab_recurring', 'Top Recurring / Idle Noise'))}</button>
+        </div>
+
+        ${secRowsHtml}
+
+        <div class="dash-panel-foot">
+          <button type="button" class="btn btn-sm btn-outline" onclick="openSecurityModal()">${escapeHtml(t('dash_sec_open_full', 'Open Security Center'))}</button>
+          ${(sec.open_total || 0) > 0 ? `<button type="button" class="btn btn-sm btn-warning" onclick="ackSecurity(0)">${escapeHtml(t('sec_ack_all', 'Acknowledge all'))}</button>` : ''}
+        </div>
+      </section>
+
+      <section class="dash-panel" aria-labelledby="dashDriftPanelTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashDriftPanelTitle" class="dash-panel-title">${escapeHtml(t('dash_drift_panel_title', 'Active Drift Alerts & Recent Incidents'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_drift_panel_sub', 'Desired State deviations detected during SSH inspections.'))}</div>
+          </div>
+          ${alerts.length > 0 ? `<button type="button" class="btn btn-sm btn-danger" onclick="ackAllAlerts()">${escapeHtml(t('dismiss_all', 'Dismiss All'))}</button>` : ''}
+        </div>
+        ${driftRowsHtml}
+      </section>
+    `;
+  }
+
+  // Band 2 Right: Fleet Capacity & Telemetry + Host Watchlist
+  let capacityBodyHtml = '';
+  if (hosts.length === 0) {
+    capacityBodyHtml = `
+      <div class="dash-empty">
+        <div class="dash-empty-title">${escapeHtml(t('dash_capacity_empty_title', 'No SSH Hosts Registered Yet'))}</div>
+        <div class="dash-empty-desc">${escapeHtml(t('dash_capacity_empty_desc', 'Add a Linux server (including local server1@127.0.0.1 for host and rootless Podman containers) to collect CPU, RAM, Disk I/O, lifecycle score, and drift telemetry.'))}</div>
+        <button type="button" class="btn btn-sm btn-primary" onclick="openAddHostModal()">${escapeHtml(t('add_host', '+ Add Host'))}</button>
+      </div>
+    `;
+  } else {
+    let totalCores = 0, sumLoad = 0, ramUsed = 0, ramTot = 0, diskUsed = 0, diskTot = 0;
+    let diskReadBps = 0, diskWriteBps = 0, netRxBps = 0, netTxBps = 0, scoreSum = 0;
+    let publicPorts = 0, failedLogins = 0;
+    hosts.forEach(h => {
+      const cores = h.cpu_cores > 0 ? h.cpu_cores : 1;
+      totalCores += cores;
+      if (h.cpu_load) {
+        sumLoad += parseFloat(h.cpu_load.split(',')[0].trim()) || 0;
+      }
+      ramUsed += h.ram_used_bytes || 0;
+      ramTot += h.ram_total_bytes || 0;
+      diskUsed += h.disk_used_bytes || 0;
+      diskTot += h.disk_total_bytes || 0;
+      diskReadBps += h.disk_read_speed_bps || 0;
+      diskWriteBps += h.disk_write_speed_bps || 0;
+      netRxBps += h.net_rx_speed_bps || 0;
+      netTxBps += h.net_tx_speed_bps || 0;
+      scoreSum += h.lifecycle_score || 0;
+      failedLogins += h.failed_logins_count || 0;
+      try {
+        const ports = h.listening_ports ? JSON.parse(h.listening_ports) : [];
+        if (Array.isArray(ports)) publicPorts += ports.filter(p => p.public).length;
+      } catch (e) {}
+    });
+    const ramPct = ramTot > 0 ? Math.round((ramUsed / ramTot) * 100) : 0;
+    const diskPct = diskTot > 0 ? Math.round((diskUsed / diskTot) * 100) : 0;
+    const avgScore = Math.round(scoreSum / hosts.length);
+    const totalDiskIoBps = diskReadBps + diskWriteBps;
+    let ioClass = t('disk_io_optimal', 'Optimal');
+    if (totalDiskIoBps >= 80 * 1024 * 1024) ioClass = t('disk_io_busy', 'High Load');
+    else if (totalDiskIoBps >= 10 * 1024 * 1024) ioClass = t('disk_io_active', 'Active');
+
+    capacityBodyHtml = `
+      <div class="dash-resource-grid">
+        <div class="dash-metric-box">
+          <div class="dash-metric-k">${escapeHtml(t('dash_stat_cpu', 'CPU Cores & Avg Load'))}</div>
+          <div class="dash-metric-v">${totalCores} cores</div>
+          <div class="dash-metric-sub">Load sum: ${sumLoad.toFixed(2)}</div>
+        </div>
+        <div class="dash-metric-box">
+          <div class="dash-metric-k">${escapeHtml(t('dash_stat_lifecycle', 'Avg Lifecycle Score'))}</div>
+          <div class="dash-metric-v">${avgScore}/100</div>
+          <div class="dash-metric-sub">${Number(ws.packages_count || 0)} packages indexed</div>
+        </div>
+        <div class="dash-metric-box">
+          <div class="dash-metric-k">${escapeHtml(t('dash_stat_ram', 'Fleet RAM Usage'))}</div>
+          <div class="dash-metric-v">${escapeHtml(formatBytes(ramUsed))} / ${escapeHtml(formatBytes(ramTot))} (${ramPct}%)</div>
+          <div class="progress"><div class="progress-fill ${ramPct > 90 ? 'danger' : (ramPct > 75 ? 'warn' : '')}" style="width: ${ramPct}%"></div></div>
+        </div>
+        <div class="dash-metric-box">
+          <div class="dash-metric-k">${escapeHtml(t('dash_stat_disk', 'Root Disk Usage'))}</div>
+          <div class="dash-metric-v">${escapeHtml(formatBytes(diskUsed))} / ${escapeHtml(formatBytes(diskTot))} (${diskPct}%)</div>
+          <div class="progress"><div class="progress-fill ${diskPct > 85 ? 'danger' : (diskPct > 70 ? 'warn' : '')}" style="width: ${diskPct}%"></div></div>
+        </div>
+        <div class="dash-metric-box">
+          <div class="dash-metric-k">${escapeHtml(t('dash_stat_io', 'Disk I/O & Network'))}</div>
+          <div class="dash-metric-v">${escapeHtml(formatBytes(totalDiskIoBps))}/s (${escapeHtml(ioClass)})</div>
+          <div class="dash-metric-sub">Net: ${escapeHtml(formatBytes(netRxBps))}/s in, ${escapeHtml(formatBytes(netTxBps))}/s out</div>
+        </div>
+        <div class="dash-metric-box">
+          <div class="dash-metric-k">${escapeHtml(t('dash_stat_exposure', 'Network Exposure & Auth'))}</div>
+          <div class="dash-metric-v">${publicPorts} public ports</div>
+          <div class="dash-metric-sub">${failedLogins} failed SSH logins</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const statusRank = { down: 0, degraded: 1, unknown: 2, healthy: 3 };
+  const sortedWatch = [...hosts].sort((a, b) => {
+    const ra = statusRank[a.status] ?? 2;
+    const rb = statusRank[b.status] ?? 2;
+    if (ra !== rb) return ra - rb;
+    if ((a.lifecycle_score || 0) !== (b.lifecycle_score || 0)) return (a.lifecycle_score || 0) - (b.lifecycle_score || 0);
+    return (a.name || '').localeCompare(b.name || '');
+  }).slice(0, 8);
+
+  const watchlistHtml = sortedWatch.length > 0 ? `
+    <div class="dash-table-wrap">
+      <table class="dash-table dash-watchlist-table">
+        <thead>
+          <tr>
+            <th>${escapeHtml(t('dash_col_host', 'Host'))}</th>
+            <th>${escapeHtml(t('dash_col_status', 'Status'))}</th>
+            <th>${escapeHtml(t('dash_col_usage', 'RAM / Disk'))}</th>
+            <th class="num dash-col-hide-mobile">${escapeHtml(t('dash_col_score', 'Lifecycle'))}</th>
+            <th class="dash-col-hide-mobile">${escapeHtml(t('dash_col_actions', 'Actions'))}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedWatch.map(h => {
+            const rPct = h.ram_total_bytes > 0 ? Math.round((h.ram_used_bytes / h.ram_total_bytes) * 100) : 0;
+            const dPct = h.disk_total_bytes > 0 ? Math.round((h.disk_used_bytes / h.disk_total_bytes) * 100) : 0;
+            return `
+              <tr>
+                <td>
+                  <div style="font-weight: 600;">${escapeHtml(h.name)}</div>
+                  <div style="font-size: 0.74rem; color: #94a3b8; font-family: monospace;">${escapeHtml(h.host)}:${Number(h.port || 22)}</div>
+                </td>
+                <td><span class="badge badge-${escapeHtml(h.status || 'unknown')}">${escapeHtml(h.status || 'unknown')}</span></td>
+                <td style="font-variant-numeric: tabular-nums; white-space: nowrap;">${rPct}% / ${dPct}%</td>
+                <td class="num dash-col-hide-mobile">${Number(h.lifecycle_score || 0)}/100</td>
+                <td class="dash-col-hide-mobile">
+                  <div class="dash-event-actions dash-watchlist-actions">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="openHostDetail(${Number(h.id)})">${escapeHtml(t('btn_view', 'View'))}</button>
+                    <button type="button" class="btn btn-sm" onclick="openHostTerminal(${Number(h.id)})">${escapeHtml(t('btn_terminal', 'Terminal'))}</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : `
+    <div class="dash-empty">
+      <div class="dash-empty-desc">${escapeHtml(t('dash_watchlist_empty', 'Register at least one host to monitor per-server metrics and launch terminals.'))}</div>
+    </div>
+  `;
+
+  const rightCol = document.getElementById('dashWorkspaceRight');
+  if (rightCol) {
+    rightCol.innerHTML = `
+      <section class="dash-panel" aria-labelledby="dashCapacityTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashCapacityTitle" class="dash-panel-title">${escapeHtml(t('dash_capacity_panel_title', 'Fleet Capacity & Telemetry'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_capacity_panel_sub', 'Aggregated compute, storage, I/O throughput, and network exposure across registered hosts.'))}</div>
+          </div>
+        </div>
+        ${capacityBodyHtml}
+      </section>
+
+      <section class="dash-panel" aria-labelledby="dashWatchlistTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashWatchlistTitle" class="dash-panel-title">${escapeHtml(t('dash_watchlist_title', 'Host Watchlist'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_watchlist_sub', 'Sorted by severity, lifecycle score, and resource pressure.'))}</div>
+          </div>
+          ${hosts.length > 0 ? `<button type="button" class="btn btn-sm btn-outline" onclick="setAppView('hosts')">${escapeHtml(t('dash_view_all_hosts', 'View All Hosts'))}</button>` : ''}
+        </div>
+        ${watchlistHtml}
+      </section>
+    `;
+  }
+
+  // Band 3: Recent Inspection Runs, System Hardening & Notification Channels, Operations Hub & Global Notes
+  const runsHtml = runs.length > 0 ? `
+    <div class="dash-event-list">
+      ${runs.slice(0, 6).map(r => `
+        <div class="dash-event-row ${r.status === 'ok' ? '' : (r.status === 'down' || r.status === 'error' ? 'sev-critical' : 'sev-high')}">
+          <div class="dash-event-row-head">
+            <span class="dash-sev-tag ${r.status === 'ok' ? 'low' : (r.status === 'down' || r.status === 'error' ? 'critical' : 'high')}">${escapeHtml(r.status)}</span>
+            <span class="dash-event-title">${escapeHtml(r.host_name)}</span>
+            <button type="button" class="btn btn-sm btn-outline" onclick="openHostRunsFromDashboard(${Number(r.host_id)})">${escapeHtml(t('dash_open_runs', 'Runs'))}</button>
+          </div>
+          <div class="dash-event-meta">
+            <span>${escapeHtml(r.summary || '-')}</span>
+            <span>${Number(r.duration_ms || 0)}ms</span>
+            <span title="${escapeHtml(dashFmtTimeTitle(r.started_at))}">${escapeHtml(dashFmtTime(r.started_at))}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  ` : `
+    <div class="dash-empty">
+      <div class="dash-empty-title">${escapeHtml(t('dash_runs_empty_title', 'No Inspection Runs Recorded'))}</div>
+      <div class="dash-empty-desc">${escapeHtml(t('dash_runs_empty_desc', 'Runs are recorded automatically on each manual or background SSH inspection cycle.'))}</div>
+    </div>
+  `;
+
+  const browserPerm = ('Notification' in window) ? Notification.permission : 'unsupported';
+  const browserPermLabel = browserPerm === 'granted'
+    ? t('dash_enabled', 'Enabled')
+    : (browserPerm === 'denied' ? t('dash_blocked', 'Blocked in browser') : t('dash_disabled', 'Disabled'));
+  const pollLabel = posture.background_paused
+    ? t('dash_paused', 'Paused (manual only)')
+    : `${Number(posture.poll_interval_sec || 300)}s`;
+  const backupStatusStr = posture.github_backup_enabled
+    ? `${t('dash_enabled', 'Enabled')}${posture.last_backup_time ? ' (' + posture.last_backup_time + ')' : ''}`
+    : t('dash_disabled', 'Disabled');
+  const notesText = (ws.global_notes || '').trim();
+  const termActiveCount = Array.isArray(terminalTabs) ? terminalTabs.length : 0;
+
+  const bottomGrid = document.getElementById('dashBottomGrid');
+  if (bottomGrid) {
+    bottomGrid.innerHTML = `
+      <section class="dash-panel" aria-labelledby="dashRunsTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashRunsTitle" class="dash-panel-title">${escapeHtml(t('dash_runs_title', 'Recent Inspection Runs'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_runs_sub', 'Latest agentless SSH inspection sweeps recorded in SQLite.'))}</div>
+          </div>
+        </div>
+        ${runsHtml}
+      </section>
+
+      <section class="dash-panel" aria-labelledby="dashReadinessTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashReadinessTitle" class="dash-panel-title">${escapeHtml(t('dash_readiness_title', 'Hardening & Notification Readiness'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_readiness_sub', 'Authentication, alert dispatchers, and backup state.'))}</div>
+          </div>
+        </div>
+        <div class="dash-kv-list">
+          <div class="dash-kv-row">
+            <div class="dash-kv-main">
+              <span class="dash-kv-name">${escapeHtml(t('dash_cfg_poll', 'Background Inspection'))}</span>
+              <span class="dash-kv-status ${posture.background_paused ? 'status-text-warn' : 'status-text-ok'}">${escapeHtml(pollLabel)}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="openSettingsModal('general')">${escapeHtml(t('dash_configure', 'Configure'))}</button>
+          </div>
+          <div class="dash-kv-row">
+            <div class="dash-kv-main">
+              <span class="dash-kv-name">${escapeHtml(t('dash_cfg_2fa', 'Admin 2FA (TOTP)'))}</span>
+              <span class="dash-kv-status ${posture.totp_enabled ? 'status-text-ok' : 'status-text-warn'}">${escapeHtml(posture.totp_enabled ? t('dash_enabled', 'Enabled') : t('dash_disabled', 'Disabled'))}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="openSettingsModal('security')">${escapeHtml(t('dash_configure', 'Configure'))}</button>
+          </div>
+          <div class="dash-kv-row">
+            <div class="dash-kv-main">
+              <span class="dash-kv-name">${escapeHtml(t('dash_cfg_desktop', 'Server Desktop Notify'))}</span>
+              <span class="dash-kv-status ${posture.desktop_notify_enabled ? 'status-text-ok' : ''}">${escapeHtml(posture.desktop_notify_enabled ? t('dash_enabled', 'Enabled') : t('dash_disabled', 'Disabled'))}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="openSecurityModal()">${escapeHtml(t('sec_view', 'View'))}</button>
+          </div>
+          <div class="dash-kv-row">
+            <div class="dash-kv-main">
+              <span class="dash-kv-name">${escapeHtml(t('dash_cfg_browser', 'Browser Popups'))}</span>
+              <span class="dash-kv-status ${browserPerm === 'granted' ? 'status-text-ok' : ''}">${escapeHtml(browserPermLabel)}</span>
+            </div>
+            ${browserPerm === 'default' ? `<button type="button" class="btn btn-sm btn-outline" onclick="enableSecurityNotifications()">${escapeHtml(t('dash_enable', 'Enable'))}</button>` : ''}
+          </div>
+          <div class="dash-kv-row">
+            <div class="dash-kv-main">
+              <span class="dash-kv-name">${escapeHtml(t('dash_cfg_telegram', 'Telegram Alerts'))} / ${escapeHtml(t('dash_cfg_webhook', 'Webhook Alerts'))}</span>
+              <span class="dash-kv-status">TG: ${escapeHtml(posture.telegram_configured ? t('dash_configured', 'Configured') : t('dash_not_configured', 'Not configured'))} | WH: ${escapeHtml(posture.webhook_configured ? t('dash_configured', 'Configured') : t('dash_not_configured', 'Not configured'))}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="openSettingsModal('notif')">${escapeHtml(t('dash_configure', 'Configure'))}</button>
+          </div>
+          <div class="dash-kv-row">
+            <div class="dash-kv-main">
+              <span class="dash-kv-name">${escapeHtml(t('dash_cfg_backup', 'GitHub Encrypted Sync'))}</span>
+              <span class="dash-kv-status">${escapeHtml(backupStatusStr)}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="openSettingsModal('backup')">${escapeHtml(t('dash_configure', 'Configure'))}</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-panel" aria-labelledby="dashToolsTitle">
+        <div class="dash-panel-head">
+          <div>
+            <h2 id="dashToolsTitle" class="dash-panel-title">${escapeHtml(t('dash_tools_title', 'Operations Hub & Global Notes'))}</h2>
+            <div class="dash-panel-sub">${escapeHtml(t('dash_tools_sub', 'Direct access to Pantau tools and shared operator notes.'))}</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="openGlobalNotesModal()">${escapeHtml(t('dash_edit_notes', 'Edit Notes'))}</button>
+        </div>
+
+        <div class="dash-tool-grid">
+          <button type="button" class="dash-tool-btn" onclick="toggleTerminalDock()">
+            <span class="dash-tool-name">${escapeHtml(t('dash_tool_terminal', 'Terminal Dock'))}</span>
+            <span class="dash-tool-meta" id="dashToolTerminalMeta">${termActiveCount} ${escapeHtml(t('dash_active_sessions', 'active'))} · ${Number(ws.presets_count || 0)} ${escapeHtml(t('dash_saved_presets', 'presets'))}</span>
+          </button>
+          <button type="button" class="dash-tool-btn" onclick="openTransfersModal()">
+            <span class="dash-tool-name">${escapeHtml(t('dash_tool_transfers', 'Cross-Host Transfers'))}</span>
+            <span class="dash-tool-meta">${Number(posture.active_transfers || 0)} ${escapeHtml(t('dash_active_sessions', 'active'))} · ${Number(posture.total_transfers || 0)} total</span>
+          </button>
+          <button type="button" class="dash-tool-btn" onclick="openGlobalPinsModal()">
+            <span class="dash-tool-name">${escapeHtml(t('dash_tool_bookmarks', 'Global Bookmarks'))}</span>
+            <span class="dash-tool-meta">${Number(ws.file_pins_count || 0)} ${escapeHtml(t('dash_pins_saved', 'pinned paths'))}</span>
+          </button>
+          <button type="button" class="dash-tool-btn" onclick="openNetDiagModal()">
+            <span class="dash-tool-name">${escapeHtml(t('dash_tool_netdiag', 'Network Diagnostics'))}</span>
+            <span class="dash-tool-meta">${hosts.length} ${escapeHtml(t('nav_hosts', 'Hosts'))}</span>
+          </button>
+          <button type="button" class="dash-tool-btn" ${hosts.length < 2 ? 'disabled' : ''} onclick="openHostCompareModal()">
+            <span class="dash-tool-name">${escapeHtml(t('dash_tool_compare', 'Host Comparison'))}</span>
+            <span class="dash-tool-meta">${escapeHtml(hosts.length < 2 ? t('dash_need_2_hosts', 'Needs 2+ hosts') : `${hosts.length} hosts`)}</span>
+          </button>
+          <button type="button" class="dash-tool-btn" onclick="toggleActivityConsole(true)">
+            <span class="dash-tool-name">${escapeHtml(t('dash_tool_activity', 'Activity Console'))}</span>
+            <span class="dash-tool-meta">SSE Live Stream</span>
+          </button>
+        </div>
+
+        <div class="dash-notes-preview">${notesText ? escapeHtml(notesText) : `<span style="color: #94a3b8;">${escapeHtml(t('dash_notes_empty', 'No global operator notes saved yet.'))}</span>`}</div>
+      </section>
+    `;
   }
 }
 
